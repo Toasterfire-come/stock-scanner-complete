@@ -14,13 +14,15 @@ import {
   ExternalLink,
   Share2,
   Twitter,
-  Linkedin
+  Linkedin,
+  GitBranch
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { toast } from "sonner";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { forkSharedBacktest } from "../api/client";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
@@ -113,6 +115,38 @@ export default function PublicBacktestShare() {
     } catch {
       toast.error("Failed to copy strategy prompt");
     }
+  };
+
+  const forkThisStrategy = async () => {
+    // Requires auth (ProtectedRoute will handle redirect); store prefill in localStorage either way.
+    try {
+      // Prefer server-side fork (tracks fork_count and lineage)
+      if (!isNumericId && idOrSlug) {
+        const data = await forkSharedBacktest(idOrSlug);
+        if (data?.success && data.fork_backtest_id) {
+          localStorage.setItem("backtest_fork_prefill", JSON.stringify({
+            backtest_id: data.fork_backtest_id,
+            creator_username: backtest?.creator?.username || null,
+          }));
+          navigate("/app/backtesting");
+          return;
+        }
+      }
+    } catch {
+      // fall back to client-side prefill
+    }
+
+    localStorage.setItem("backtest_fork_prefill", JSON.stringify({
+      name: `${backtest?.name || "Strategy"} (Fork)`,
+      strategy_text: backtest?.strategy_text || "",
+      category: backtest?.category,
+      symbols: backtest?.symbols || [],
+      start_date: backtest?.start_date,
+      end_date: backtest?.end_date,
+      initial_capital: backtest?.initial_capital,
+      creator_username: backtest?.creator?.username || null,
+    }));
+    navigate("/app/backtesting");
   };
 
   if (loading) {
@@ -238,6 +272,10 @@ export default function PublicBacktestShare() {
               <div className="flex flex-wrap gap-2 justify-end">
                 <Button variant="outline" size="sm" onClick={copyStrategyPrompt}>
                   Copy Strategy
+                </Button>
+                <Button variant="outline" size="sm" onClick={forkThisStrategy}>
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Fork
                 </Button>
                 <Button variant="outline" size="sm" onClick={shareToTwitter}>
                   <Twitter className="h-4 w-4 text-blue-500" />

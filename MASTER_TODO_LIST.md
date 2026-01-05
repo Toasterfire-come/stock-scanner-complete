@@ -154,13 +154,13 @@ The repo already contains substantial implementation work that this checklist wa
 ### Network Effects - Month 2 (40 hours)
 
 #### Strategy Forking
-- [ ] **TICKET #7: Fork/Remix Strategies** (8 hours)
-  - [ ] Backend: Add `forked_from` field to Backtest model
-  - [ ] Backend: Create `fork_backtest()` endpoint
-  - [ ] Frontend: Add "Fork Strategy" button
-  - [ ] Pre-fill Create tab with forked strategy
-  - [ ] Show attribution ("Inspired by @username")
-  - [ ] Track fork count
+- [ ] **TICKET #7: Fork/Remix Strategies** (8 hours) 🟨
+  - [x] Backend: Add `forked_from` field to Backtest model
+  - [x] Backend: Create `fork_backtest()` endpoint
+  - [x] Frontend: Add "Fork Strategy" button *(public share page)*
+  - [x] Pre-fill Create tab with forked strategy
+  - [x] Show attribution ("Inspired by @username")
+  - [x] Track fork count *(stored on original backtest)*
   - [ ] QA: Test fork chain (fork of fork)
 
 #### Comparison Mode

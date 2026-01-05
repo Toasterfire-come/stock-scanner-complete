@@ -993,6 +993,8 @@ class BacktestRun(models.Model):
     share_slug = models.SlugField(max_length=64, unique=True, null=True, blank=True, db_index=True, help_text="Public share slug (stable URL)")
     public_view_count = models.PositiveIntegerField(default=0, help_text="Public page views")
     shared_at = models.DateTimeField(null=True, blank=True, help_text="When backtest was first made public")
+    forked_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='forks')
+    fork_count = models.PositiveIntegerField(default=0, help_text="How many times this backtest has been forked")
     is_baseline = models.BooleanField(default=False, help_text="Official baseline strategy")
     
     # Timestamps

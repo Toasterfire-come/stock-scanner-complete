@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -53,7 +53,8 @@ import {
   listBacktests, 
   getBaselineStrategies,
   shareBacktest,
-  revokeSharedBacktest
+  revokeSharedBacktest,
+  forkBacktest
 } from "../../api/client";
 import { 
   LineChart as RechartsLineChart, 
@@ -220,6 +221,7 @@ const BacktestHistoryItem = ({ backtest, onView, selectedForCompare, onToggleCom
 
 export default function Backtesting() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("create");
   const [category, setCategory] = useState("swing_trading");
   const [strategyText, setStrategyText] = useState("");
@@ -251,6 +253,7 @@ export default function Backtesting() {
   const [pdfExporting, setPdfExporting] = useState(false);
   const [embedOpen, setEmbedOpen] = useState(false);
   const [weeklyChallenge, setWeeklyChallenge] = useState(null);
+  const [forkAttribution, setForkAttribution] = useState(null);
 
   // Ref for export functionality
   const resultsCardRef = useRef(null);
@@ -534,6 +537,47 @@ Learn from my mistakes 👉 ${shareUrl}`;
     loadBacktestHistory();
   }, []);
 
+  // Prefill from fork (via localStorage)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("backtest_fork_prefill");
+      if (!raw) return;
+      const payload = JSON.parse(raw);
+      localStorage.removeItem("backtest_fork_prefill");
+
+      if (payload?.backtest_id) {
+        // If we have an existing forked backtest id, load it and prefill from it
+        getBacktest(payload.backtest_id).then((res) => {
+          if (res?.success && res.backtest) {
+            const bt = res.backtest;
+            setBacktestName(bt.name || "");
+            setStrategyText(bt.strategy_text || "");
+            setCategory(bt.category || "swing_trading");
+            setSymbols((bt.symbols || []).join(", "));
+            setStartDate(bt.start_date || startDate);
+            setEndDate(bt.end_date || endDate);
+            setInitialCapital(String(bt.initial_capital || initialCapital));
+            setForkAttribution(payload?.creator_username ? `Inspired by @${payload.creator_username}` : null);
+            setActiveTab("create");
+          }
+        });
+      } else if (payload?.strategy_text) {
+        setBacktestName(payload?.name || "");
+        setStrategyText(payload.strategy_text || "");
+        setCategory(payload.category || "swing_trading");
+        setSymbols((payload.symbols || []).join(", "));
+        setStartDate(payload.start_date || startDate);
+        setEndDate(payload.end_date || endDate);
+        setInitialCapital(String(payload.initial_capital || initialCapital));
+        setForkAttribution(payload?.creator_username ? `Inspired by @${payload.creator_username}` : null);
+        setActiveTab("create");
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Load weekly challenge
   useEffect(() => {
     const load = async () => {
@@ -738,6 +782,14 @@ Learn from my mistakes 👉 ${shareUrl}`;
             </Button>
           </div>
         </div>
+
+        {forkAttribution && (
+          <div className="mt-3">
+            <Badge variant="outline" className="bg-purple-50 border-purple-200 text-purple-700">
+              {forkAttribution}
+            </Badge>
+          </div>
+        )}
 
         {weeklyChallenge && (
           <Card className="mt-4 border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">

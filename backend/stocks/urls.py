@@ -320,6 +320,7 @@ urlpatterns = [
     path('backtesting/create/', backtesting_api.create_backtest, name='create_backtest'),
     path('backtesting/<int:backtest_id>/run/', backtesting_api.run_backtest, name='run_backtest'),
     path('backtesting/<int:backtest_id>/', backtesting_api.get_backtest, name='get_backtest'),
+    path('backtesting/<int:backtest_id>/fork/', backtesting_api.fork_backtest, name='fork_backtest'),
     path('backtesting/public/<int:backtest_id>/', backtesting_api.get_public_backtest, name='get_public_backtest'),
     path('backtesting/list/', backtesting_api.list_backtests, name='list_backtests'),
     path('backtesting/baseline-strategies/', backtesting_api.list_baseline_strategies, name='baseline_strategies'),
@@ -329,6 +330,7 @@ urlpatterns = [
     path('share/backtests/<int:backtest_id>/create', backtesting_api.create_backtest_share_link, name='share_backtest_create_link'),
     path('share/backtests/<int:backtest_id>/revoke', backtesting_api.revoke_backtest_share_link, name='share_backtest_revoke_link'),
     path('share/backtests/<str:slug>/', backtesting_api.get_shared_backtest, name='share_backtest_public'),
+    path('share/backtests/<str:slug>/fork', backtesting_api.fork_shared_backtest, name='share_backtest_fork'),
     
     # Achievement endpoints (Gamification)
     path('achievements/', achievements_api.get_achievements, name='get_achievements'),

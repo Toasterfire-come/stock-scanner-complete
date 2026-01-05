@@ -41,6 +41,14 @@ def _generate_unique_backtest_share_slug(backtest: BacktestRun) -> str:
     return f"{base}-{token}"
 
 
+def _increment_fork_count(original: BacktestRun) -> None:
+    try:
+        original.fork_count = (original.fork_count or 0) + 1
+        original.save(update_fields=["fork_count"])
+    except Exception:
+        pass
+
+
 def get_user_backtest_limit(user):
     """Get user's monthly backtest limit based on subscription tier"""
     try:
@@ -267,6 +275,8 @@ def get_backtest(request, backtest_id):
                 'is_public': bool(backtest.is_public),
                 'share_slug': backtest.share_slug,
                 'public_view_count': backtest.public_view_count,
+                'fork_count': backtest.fork_count,
+                'forked_from': backtest.forked_from_id,
                 'results': {
                     'total_return': float(backtest.total_return) if backtest.total_return else None,
                     'annualized_return': float(backtest.annualized_return) if backtest.annualized_return else None,
@@ -322,6 +332,8 @@ def list_backtests(request):
                     'is_public': bool(b.is_public),
                     'share_slug': b.share_slug,
                     'public_view_count': b.public_view_count,
+                    'fork_count': b.fork_count,
+                    'forked_from': b.forked_from_id,
                     'composite_score': float(b.composite_score) if b.composite_score else None,
                     'total_return': float(b.total_return) if b.total_return else None,
                     'created_at': b.created_at.isoformat()
@@ -459,6 +471,7 @@ def get_public_backtest(request, backtest_id):
                 'initial_capital': float(backtest.initial_capital),
                 'share_slug': backtest.share_slug,
                 'public_view_count': backtest.public_view_count,
+                'fork_count': backtest.fork_count,
                 'creator': {
                     'username': getattr(backtest.user, 'username', None),
                 },
@@ -595,6 +608,7 @@ def get_shared_backtest(request, slug):
                 "initial_capital": float(backtest.initial_capital),
                 "share_slug": backtest.share_slug,
                 "public_view_count": backtest.public_view_count,
+                "fork_count": backtest.fork_count,
                 "creator": {
                     "username": getattr(backtest.user, "username", None),
                 },
@@ -612,6 +626,82 @@ def get_shared_backtest(request, slug):
                 "equity_curve": backtest.equity_curve,
                 "created_at": backtest.created_at.isoformat(),
             }
+        })
+    except BacktestRun.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Backtest not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def fork_backtest(request, backtest_id):
+    """
+    Fork a backtest by id. If it's not owned by the user, it must be public.
+    Creates a new BacktestRun in 'pending' status with identical strategy inputs.
+    """
+    try:
+        original = BacktestRun.objects.get(id=backtest_id)
+
+        if original.status != "completed":
+            return JsonResponse({"success": False, "error": "Only completed backtests can be forked"}, status=400)
+
+        if original.user_id != request.user.id and not original.is_public:
+            return JsonResponse({"success": False, "error": "Backtest is private"}, status=403)
+
+        fork = BacktestRun.objects.create(
+            user=request.user,
+            name=f"{original.name} (Fork)",
+            strategy_text=original.strategy_text,
+            category=original.category,
+            symbols=original.symbols,
+            start_date=original.start_date,
+            end_date=original.end_date,
+            initial_capital=original.initial_capital,
+            status="pending",
+            is_public=False,
+            forked_from=original,
+        )
+        _increment_fork_count(original)
+
+        return JsonResponse({
+            "success": True,
+            "fork_backtest_id": fork.id,
+            "forked_from": original.id,
+        })
+    except BacktestRun.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Backtest not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def fork_shared_backtest(request, slug):
+    """Fork a public shared backtest by slug."""
+    try:
+        original = BacktestRun.objects.get(share_slug=slug, is_public=True, status="completed")
+        fork = BacktestRun.objects.create(
+            user=request.user,
+            name=f"{original.name} (Fork)",
+            strategy_text=original.strategy_text,
+            category=original.category,
+            symbols=original.symbols,
+            start_date=original.start_date,
+            end_date=original.end_date,
+            initial_capital=original.initial_capital,
+            status="pending",
+            is_public=False,
+            forked_from=original,
+        )
+        _increment_fork_count(original)
+
+        return JsonResponse({
+            "success": True,
+            "fork_backtest_id": fork.id,
+            "forked_from": original.id,
         })
     except BacktestRun.DoesNotExist:
         return JsonResponse({"success": False, "error": "Backtest not found"}, status=404)
