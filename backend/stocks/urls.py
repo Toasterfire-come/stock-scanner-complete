@@ -73,6 +73,7 @@ from . import enhanced_screener_api
 from . import fast_chart_api
 from . import valuation_display_api
 from . import grouping_api
+from . import achievements_api
 
 
 
@@ -322,6 +323,11 @@ urlpatterns = [
     path('backtesting/baseline-strategies/', backtesting_api.list_baseline_strategies, name='baseline_strategies'),
     path('backtesting/limits/', backtesting_api.get_backtest_limits, name='backtest_limits'),
     
+    # Achievement endpoints (Gamification)
+    path('achievements/', achievements_api.get_achievements, name='get_achievements'),
+    path('achievements/<str:achievement_id>/share/', achievements_api.share_achievement, name='share_achievement'),
+    path('achievements/progress/', achievements_api.get_achievement_progress, name='achievement_progress'),
+
     # Value Hunter endpoints (Phase 5)
     path('value-hunter/current/', value_hunter_api.get_current_week, name='vh_current_week'),
     path('value-hunter/<int:year>/<int:week_number>/', value_hunter_api.get_week, name='vh_get_week'),

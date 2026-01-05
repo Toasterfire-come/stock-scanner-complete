@@ -4350,3 +4350,6 @@ class DatabaseMigrationLog(models.Model):
         return f"{self.app_label}.{self.migration_name} - {status}"
 
 
+# Import Achievement model from achievement_system
+from .achievement_system import Achievement
+

@@ -182,7 +182,20 @@ def run_backtest(request, backtest_id):
         backtest.trades_data = results.get('trades_data', [])
         backtest.equity_curve = results.get('equity_curve', [])
         backtest.save()
-        
+
+        # Check for achievement unlocks
+        newly_unlocked_achievements = []
+        if backtest.user.is_authenticated:
+            try:
+                from .achievement_system import AchievementChecker
+                newly_unlocked_achievements = AchievementChecker.check_all_achievements(
+                    backtest.user,
+                    backtest
+                )
+            except Exception:
+                # Silently fail if achievement checking fails
+                pass
+
         return JsonResponse({
             'success': True,
             'results': {
@@ -196,7 +209,8 @@ def run_backtest(request, backtest_id):
                 'winning_trades': backtest.winning_trades or 0,
                 'losing_trades': backtest.losing_trades or 0,
                 'composite_score': float(backtest.composite_score) if backtest.composite_score else 0
-            }
+            },
+            'achievements_unlocked': newly_unlocked_achievements
         })
     
     except BacktestRun.DoesNotExist:
