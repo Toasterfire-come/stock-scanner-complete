@@ -5,62 +5,74 @@
 
 ---
 
+## ✅ Reality Check (Actual Repo Status)
+**Last audited:** January 5, 2026
+
+The repo already contains substantial implementation work that this checklist wasn’t reflecting. Highlights:
+- ✅ **Social share buttons + share text + copy + basic event logging** are implemented in `frontend/src/pages/app/Backtesting.jsx`
+- 🟨 **PNG image export** is implemented (via `html-to-image`), but size variants + QR-code export still need polish
+- ✅ **Advanced metrics (Sortino/Calmar/Omega/VaR/CVaR/etc) + composite score + quality grade** are implemented (backend + UI)
+- 🟨 **Achievements system** exists (backend + frontend components) and is returned by the backtest API, but the UI wiring still needs completing
+- 🟨 **Public backtest share page** exists (`/share/backtest/:backtest_id`) but needs endpoint alignment + “public/private” model controls
+
+---
+
 ## 🔥 PRIORITY 0 - CRITICAL (Launch Blockers)
 
 ### Viral Features - Week 1-2 (40 hours)
 
 #### AI Backtester Social Sharing
-- [ ] **TICKET #1: Social Share Buttons** (8 hours)
-  - [ ] Add Twitter/X share button with pre-filled text
-  - [ ] Add LinkedIn share button
-  - [ ] Add Reddit share button (with subreddit selector)
-  - [ ] Add "Copy Link" button with toast notification
-  - [ ] Implement `generateShareText()` function
-  - [ ] Track share events in analytics
+- [x] **TICKET #1: Social Share Buttons** (8 hours) ✅ *(core implemented; QA polish remains)*
+  - [x] Add Twitter/X share button with pre-filled text
+  - [x] Add LinkedIn share button
+  - [x] Add Reddit share button *(no subreddit selector yet)*
+  - [x] Add "Copy Link" button with toast notification
+  - [x] Implement `generateShareText()` function
+  - [x] Track share events in analytics *(currently `logger.info(...)`; wire to product analytics if desired)*
   - [ ] Test all share buttons on mobile
-  - [ ] QA: Verify share text populates correctly
+  - [x] QA: Verify share text populates correctly
 
 #### AI Backtester Image Export
-- [ ] **TICKET #2: Image Export Feature** (16 hours)
-  - [ ] Install `html-to-image` dependency
-  - [ ] Install `qrcode.react` dependency
-  - [ ] Create exportable results card component
-  - [ ] Add "Download as Image" button
-  - [ ] Implement `exportAsImage()` function (1200x628px Twitter)
+- [ ] **TICKET #2: Image Export Feature** (16 hours) 🟨
+  - [x] Install `html-to-image` dependency
+  - [x] Install `qrcode.react` dependency *(installed; not yet used in export output)*
+  - [x] Create exportable results card component (`resultsCardRef`)
+  - [x] Add "Download as Image" button *(labeled “Export PNG”)*
+  - [ ] Implement `exportAsImage()` function (1200x628px Twitter) *(currently exports the on-page results DOM; sizing presets still needed)*
   - [ ] Add Instagram variant (1080x1080px)
-  - [ ] Add Trade Scan Pro watermark to images
+  - [x] Add Trade Scan Pro watermark to images *(text watermark exists; upgrade to stronger branding if desired)*
   - [ ] Add QR code linking to public results
   - [ ] Test image export on all browsers
-  - [ ] QA: Verify image quality (2x pixel ratio)
+  - [x] QA: Verify image quality (2x pixel ratio) *(uses `pixelRatio: 2`)*
 
 #### Advanced Strategy Metrics
-- [ ] **TICKET #3: Advanced Metrics** (12 hours)
-  - [ ] Backend: Add `calculate_advanced_metrics()` function
-  - [ ] Calculate Sortino Ratio
-  - [ ] Calculate Calmar Ratio
-  - [ ] Calculate Omega Ratio
-  - [ ] Calculate Value at Risk (VaR 95%)
-  - [ ] Calculate Conditional VaR (CVaR)
-  - [ ] Calculate Recovery Factor
-  - [ ] Calculate Avg Win/Loss Ratio
-  - [ ] Calculate Expectancy per trade
-  - [ ] Calculate Kelly Criterion %
-  - [ ] Calculate max win/loss streaks
-  - [ ] Calculate T-statistic & P-value
-  - [ ] Calculate Alpha vs benchmark
-  - [ ] Calculate Beta (volatility)
-  - [ ] Calculate Quality Score (0-100)
-  - [ ] Frontend: Add "Advanced Metrics" tab
+- [x] **TICKET #3: Advanced Metrics** (12 hours) ✅ *(implemented; a few planned items remain)*
+  - [x] Backend: Add advanced metrics calculations *(implemented inside backtesting metrics pipeline)*
+  - [x] Calculate Sortino Ratio
+  - [x] Calculate Calmar Ratio
+  - [x] Calculate Omega Ratio
+  - [x] Calculate Value at Risk (VaR 95%)
+  - [x] Calculate Conditional VaR (CVaR)
+  - [x] Calculate Recovery Factor
+  - [x] Calculate Avg Win/Loss Ratio *(avg win + avg loss + win/loss ratio derived)*
+  - [x] Calculate Expectancy per trade
+  - [x] Calculate Kelly Criterion %
+  - [x] Calculate max win/loss streaks
+  - [x] Calculate T-statistic & P-value
+  - [ ] Calculate Alpha vs benchmark *(not implemented)*
+  - [ ] Calculate Beta (volatility) *(not implemented)*
+  - [x] Calculate Quality Score (0-100)
+  - [ ] Frontend: Add "Advanced Metrics" tab *(currently rendered as sections in Results; optional to split into a dedicated tab)*
   - [ ] Add metric tooltips ("What does this mean?")
   - [ ] Add benchmark comparison table
-  - [ ] Add statistical significance indicator
+  - [x] Add statistical significance indicator *(p-value + interpretation present)*
   - [ ] QA: Test with various strategy types
 
 #### Analytics Setup
-- [ ] **Analytics Tracking** (4 hours)
-  - [ ] Install Mixpanel or Amplitude
-  - [ ] Track 'Backtest Shared' event
-  - [ ] Track 'Backtest Image Exported' event
+- [ ] **Analytics Tracking** (4 hours) 🟨
+  - [ ] Install Mixpanel or Amplitude *(optional; repo already has Matomo proxy + structured logging + Sentry)*
+  - [x] Track 'Backtest Shared' event *(currently logged via `logger.info(...)`)*
+  - [x] Track 'Backtest Image Exported' event *(currently logged via `logger.info(...)`)*
   - [ ] Track 'Viral Signup' event (from shared links)
   - [ ] Set up conversion funnels
   - [ ] Create analytics dashboard
@@ -73,40 +85,42 @@
 ### Public Sharing & SEO - Week 3-4 (32 hours)
 
 #### Public Backtest Pages
-- [ ] **TICKET #4: Public Results Pages** (12 hours)
-  - [ ] Backend: Add `is_public`, `share_slug` fields to Backtest model
+- [ ] **TICKET #4: Public Results Pages** (12 hours) 🟨
+  - [ ] Backend: Add `is_public`, `share_slug` fields to Backtest model *(not present yet; current public page uses backtest id)*
   - [ ] Backend: Create `share_backtest()` endpoint
-  - [ ] Backend: Create `public_backtest()` endpoint (no auth required)
+  - [x] Backend: Create public endpoint (no auth required) *(exists: `backtesting/public/<id>/`)*
+  - [ ] Fix public share page API path alignment *(currently `PublicBacktestShare.jsx` fetches `/api/backtest/public/...` but backend exposes `/api/backtesting/public/...`)*
   - [ ] Backend: Add view count tracking
-  - [ ] Frontend: Create `/backtest/:shareSlug` route
-  - [ ] Frontend: Build PublicBacktest.jsx page
+  - [x] Frontend: Create share route *(exists: `/share/backtest/:backtest_id`)*
+  - [x] Frontend: Build public page *(exists: `frontend/src/pages/PublicBacktestShare.jsx`)*
   - [ ] Add "Make Public" toggle in Results tab
   - [ ] Add creator attribution (@username)
   - [ ] Add "Fork This Strategy" button
-  - [ ] Add CTA for non-logged-in users
-  - [ ] Add SEO meta tags (Open Graph, Twitter Card)
-  - [ ] QA: Test public/private access controls
+  - [x] Add CTA for non-logged-in users *(present on share page)*
+  - [x] Add SEO meta tags (Open Graph, Twitter Card) *(present on share page)*
+  - [ ] QA: Test public/private access controls *(needs model + enforcement)*
 
 #### Achievement System
-- [ ] **TICKET #5: Gamification - Badges** (12 hours)
-  - [ ] Define 10 achievement types (First Steps, In the Green, etc.)
-  - [ ] Backend: Add `achievements_earned` field to User model
-  - [ ] Backend: Create achievement check logic
-  - [ ] Frontend: Create achievement unlock notification
-  - [ ] Frontend: Add achievements display to profile
-  - [ ] Add "Share Achievement" to Twitter/X
-  - [ ] Create badge icons/graphics
-  - [ ] QA: Test achievement unlock conditions
+- [ ] **TICKET #5: Gamification - Badges** (12 hours) 🟨 *(system exists; UI wiring still needed)*
+  - [x] Define 10 achievement types (First Steps, In the Green, etc.)
+  - [x] Backend: Persist unlocked achievements *(Achievement model + migration present)*
+  - [x] Backend: Create achievement check logic *(runs after backtest completion)*
+  - [x] Frontend: Create achievement unlock notification *(component exists)*
+  - [ ] Frontend: Add achievements display to profile *(component exists; not routed/embedded yet)*
+  - [x] Add "Share Achievement" to Twitter/X *(supported in components + API)*
+  - [ ] Create badge icons/graphics *(currently emoji-based; optional upgrade)*
+  - [ ] QA: Test achievement unlock conditions + end-to-end UI flow
 
 #### Leaderboards
-- [ ] **TICKET #6: Strategy Leaderboards** (8 hours)
-  - [ ] Backend: Create leaderboard query (top by return, Sharpe, etc.)
+- [ ] **TICKET #6: Strategy Leaderboards** (8 hours) 🟨 *(backend + page exist; routing + backtester integration still needed)*
+  - [x] Backend: Create leaderboard query (top by return, Sharpe, etc.) *(exists: Strategy Ranking endpoints)*
   - [ ] Frontend: Add "Leaderboard" tab to Backtesting page
-  - [ ] Show Top 10 strategies (last 7/30/90 days)
-  - [ ] Add category filters (day trading, swing, long-term)
-  - [ ] Show fork count per strategy
-  - [ ] Add "Fork Strategy" button
-  - [ ] QA: Test leaderboard updates real-time
+  - [ ] Add route/link to leaderboard page *(StrategyLeaderboard exists but is not currently routed in `App.js`)*
+  - [x] Show Top strategies by timeframe *(backend supports timeframes; UI supports 1m/3m/6m/1y)*
+  - [x] Add category filters *(UI supports Day/Swing/Long-Term)*
+  - [x] Show fork/clone count per strategy *(backend exposes clone_count; UI shows popularity)*
+  - [x] Add "Fork/Clone Strategy" action *(clone endpoint exists; UI includes clone action)*
+  - [ ] QA: Verify leaderboard refresh + caching logic works as expected
 
 ### Content Marketing Start - Week 3-4 (20 hours)
 
@@ -375,33 +389,33 @@
 ## 🎯 90-DAY MILESTONES
 
 ### Month 1 Goals
-- ✅ Complete Priority 0 features (viral basics)
-- ✅ Launch analytics tracking
-- ✅ Publish 4 blog posts
-- ✅ Achieve 500 signups
-- ✅ Achieve 50 paid users
-- ✅ Reach $1,250 MRR
-- ✅ 15% share rate on backtests
+- ⬜ Complete Priority 0 features (viral basics)
+- ⬜ Launch analytics tracking
+- ⬜ Publish 4 blog posts
+- ⬜ Achieve 500 signups
+- ⬜ Achieve 50 paid users
+- ⬜ Reach $1,250 MRR
+- ⬜ 15% share rate on backtests
 
 ### Month 2 Goals
-- ✅ Complete Priority 1 features (public pages, gamification)
-- ✅ Launch leaderboards
-- ✅ Launch achievement system
-- ✅ Create 4 more blog posts
-- ✅ Record 2 YouTube videos
-- ✅ Achieve 750 signups
-- ✅ Achieve 90 paid users
-- ✅ Reach $2,475 MRR
+- ⬜ Complete Priority 1 features (public pages, gamification)
+- ⬜ Launch leaderboards
+- ⬜ Launch achievement system
+- ⬜ Create 4 more blog posts
+- ⬜ Record 2 YouTube videos
+- ⬜ Achieve 750 signups
+- ⬜ Achieve 90 paid users
+- ⬜ Reach $2,475 MRR
 
 ### Month 3 Goals
-- ✅ Complete Priority 2 features (network effects)
-- ✅ Launch strategy forking
-- ✅ Launch comparison mode
-- ✅ Launch weekly challenges
-- ✅ Achieve 1,125 signups
-- ✅ Achieve 146 paid users
-- ✅ Reach $4,220 MRR
-- ✅ Viral coefficient >0.3
+- ⬜ Complete Priority 2 features (network effects)
+- ⬜ Launch strategy forking
+- ⬜ Launch comparison mode
+- ⬜ Launch weekly challenges
+- ⬜ Achieve 1,125 signups
+- ⬜ Achieve 146 paid users
+- ⬜ Reach $4,220 MRR
+- ⬜ Viral coefficient >0.3
 
 ---
 
@@ -452,15 +466,15 @@
 ## ✅ COMPLETION TRACKING
 
 **Overall Progress:**
-- Priority 0: ⬜⬜⬜⬜ 0% (0/4 tasks)
-- Priority 1: ⬜⬜⬜⬜⬜⬜⬜ 0% (0/7 tasks)
+- Priority 0: ✅✅🟨🟨 50% (2/4 core tickets complete; 2 in progress)
+- Priority 1: 🟨⬜⬜⬜⬜⬜⬜ 14% (1/7 started; several partially implemented)
 - Priority 2: ⬜⬜⬜⬜⬜⬜⬜⬜ 0% (0/8 tasks)
 - Priority 3: ⬜⬜⬜⬜ 0% (0/4 tasks)
 
-**Last Updated:** January 3, 2026
+**Last Updated:** January 5, 2026
 **Next Review:** Weekly sprint planning
 **Owner:** Development Team Lead
-**Status:** Ready to begin Priority 0
+**Status:** 🟨 In progress (P0 underway)
 
 ---
 
