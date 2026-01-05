@@ -102,6 +102,10 @@ export default function SharedPortfolio() {
 
   const totalValue = allocationData.reduce((sum, item) => sum + item.value, 0);
   const totalReturn = portfolio?.total_return || 0;
+  const badges = [];
+  if (totalReturn >= 20) badges.push({ label: "Market Beater", className: "bg-green-100 text-green-700" });
+  if (totalReturn >= 50) badges.push({ label: "High Performer", className: "bg-purple-100 text-purple-700" });
+  if ((portfolio?.holdings?.length || 0) >= 10) badges.push({ label: "Diversified", className: "bg-blue-100 text-blue-700" });
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl" data-testid="shared-portfolio-page">
@@ -121,6 +125,13 @@ export default function SharedPortfolio() {
             <h1 className="text-3xl font-bold text-gray-900">{portfolio?.name}</h1>
             {portfolio?.description && (
               <p className="text-gray-600 mt-2">{portfolio.description}</p>
+            )}
+            {badges.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {badges.map((b) => (
+                  <Badge key={b.label} className={b.className}>{b.label}</Badge>
+                ))}
+              </div>
             )}
           </div>
           <Button onClick={handleCopy} disabled={copying} className="gap-2">

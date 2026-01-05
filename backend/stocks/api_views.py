@@ -1648,46 +1648,265 @@ def portfolio_holdings_count_api(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def share_watchlist_public(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+    try:
+        from .models import SharedResourceLink, UserWatchlist, WatchlistItem
+        link = SharedResourceLink.objects.select_related('watchlist', 'created_by').get(
+            slug=slug,
+            resource_type='watchlist',
+        )
+        watchlist = link.watchlist
+        if not watchlist:
+            return Response({'success': False, 'message': 'Watchlist not found'}, status=404)
+
+        # Track views
+        try:
+            link.view_count = (link.view_count or 0) + 1
+            link.last_viewed_at = timezone.now()
+            link.save(update_fields=['view_count', 'last_viewed_at'])
+        except Exception:
+            pass
+
+        items = WatchlistItem.objects.select_related('stock').filter(watchlist=watchlist).order_by('-added_at')[:200]
+        payload = {
+            'id': watchlist.id,
+            'name': watchlist.name,
+            'description': watchlist.description,
+            'created_at': watchlist.created_at.isoformat(),
+            'owner': {'username': getattr(link.created_by, 'username', None)},
+            'items': [
+                {
+                    'symbol': it.stock.ticker,
+                    'name': it.stock.company_name or it.stock.name,
+                    'current_price': float(it.current_price) if it.current_price is not None else None,
+                    'added_price': float(it.added_price) if it.added_price is not None else None,
+                    'price_change_percent': float(it.price_change_percent) if it.price_change_percent is not None else None,
+                }
+                for it in items
+            ],
+            'view_count': link.view_count,
+        }
+        return Response({'success': True, 'watchlist': payload})
+    except Exception as e:
+        logger.error(f"share_watchlist_public error: {e}", exc_info=True)
+        return Response({'success': False, 'message': 'Watchlist not found'}, status=404)
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def share_portfolio_public(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+    try:
+        from .models import SharedResourceLink, UserPortfolio, PortfolioHolding
+        link = SharedResourceLink.objects.select_related('portfolio', 'created_by').get(
+            slug=slug,
+            resource_type='portfolio',
+        )
+        portfolio = link.portfolio
+        if not portfolio:
+            return Response({'success': False, 'message': 'Portfolio not found'}, status=404)
+
+        # Track views
+        try:
+            link.view_count = (link.view_count or 0) + 1
+            link.last_viewed_at = timezone.now()
+            link.save(update_fields=['view_count', 'last_viewed_at'])
+        except Exception:
+            pass
+
+        holdings = PortfolioHolding.objects.select_related('stock').filter(portfolio=portfolio).order_by('-market_value')[:250]
+        payload = {
+            'id': portfolio.id,
+            'name': portfolio.name,
+            'description': portfolio.description,
+            'created_at': portfolio.created_at.isoformat(),
+            'total_return': float(portfolio.total_return_percent) if portfolio.total_return_percent is not None else 0.0,
+            'total_value': float(portfolio.total_value) if portfolio.total_value is not None else 0.0,
+            'owner': {'username': getattr(link.created_by, 'username', None)},
+            'holdings': [
+                {
+                    'symbol': h.stock.ticker,
+                    'shares': float(h.shares),
+                    'avg_cost': float(h.average_cost),
+                    'current_price': float(h.current_price),
+                    'market_value': float(getattr(h, 'market_value', 0) or (h.shares * h.current_price)),
+                }
+                for h in holdings
+            ],
+            'view_count': link.view_count,
+        }
+        return Response({'success': True, 'portfolio': payload})
+    except Exception as e:
+        logger.error(f"share_portfolio_public error: {e}", exc_info=True)
+        return Response({'success': False, 'message': 'Portfolio not found'}, status=404)
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def share_watchlist_export(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+    data = share_watchlist_public(request, slug)
+    return data
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def share_portfolio_export(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+    data = share_portfolio_public(request, slug)
+    return data
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def share_watchlist_copy(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+    try:
+        from django.db import transaction
+        from .models import SharedResourceLink, UserWatchlist, WatchlistItem
+        link = SharedResourceLink.objects.select_related('watchlist').get(slug=slug, resource_type='watchlist')
+        src = link.watchlist
+        if not src:
+            return Response({'success': False, 'message': 'Watchlist not found'}, status=404)
+
+        with transaction.atomic():
+            dst = UserWatchlist.objects.create(
+                user=request.user,
+                name=f"{src.name} (Copy)",
+                description=src.description,
+            )
+            items = WatchlistItem.objects.select_related('stock').filter(watchlist=src)
+            WatchlistItem.objects.bulk_create([
+                WatchlistItem(
+                    watchlist=dst,
+                    stock=it.stock,
+                    added_price=it.added_price,
+                    current_price=it.current_price,
+                    price_change=it.price_change,
+                    price_change_percent=it.price_change_percent,
+                    notes=it.notes,
+                )
+                for it in items
+            ], ignore_conflicts=True)
+
+        return Response({'success': True, 'watchlist_id': dst.id})
+    except Exception as e:
+        logger.error(f"share_watchlist_copy error: {e}", exc_info=True)
+        return Response({'success': False, 'message': 'Failed to copy watchlist'}, status=500)
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def share_portfolio_copy(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+    try:
+        from django.db import transaction
+        from .models import SharedResourceLink, UserPortfolio, PortfolioHolding
+        link = SharedResourceLink.objects.select_related('portfolio').get(slug=slug, resource_type='portfolio')
+        src = link.portfolio
+        if not src:
+            return Response({'success': False, 'message': 'Portfolio not found'}, status=404)
+
+        with transaction.atomic():
+            dst = UserPortfolio.objects.create(
+                user=request.user,
+                name=f"{src.name} (Copy)",
+                description=src.description,
+                is_public=False,
+            )
+            holdings = PortfolioHolding.objects.select_related('stock').filter(portfolio=src)
+            PortfolioHolding.objects.bulk_create([
+                PortfolioHolding(
+                    portfolio=dst,
+                    stock=h.stock,
+                    shares=h.shares,
+                    average_cost=h.average_cost,
+                    current_price=h.current_price,
+                )
+                for h in holdings
+            ])
+        return Response({'success': True, 'portfolio_id': dst.id})
+    except Exception as e:
+        logger.error(f"share_portfolio_copy error: {e}", exc_info=True)
+        return Response({'success': False, 'message': 'Failed to copy portfolio'}, status=500)
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def share_watchlist_create_link(request, watchlist_id: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'watchlist_id': watchlist_id}, status=501)
+    try:
+        from django.utils.text import slugify
+        import secrets
+        from .models import SharedResourceLink, UserWatchlist
+        wl = UserWatchlist.objects.get(id=watchlist_id, user=request.user)
+
+        existing = SharedResourceLink.objects.filter(resource_type='watchlist', watchlist=wl).first()
+        if existing:
+            return Response({'success': True, 'slug': existing.slug, 'url': f"/w/{existing.slug}"})
+
+        base = slugify(wl.name)[:40].strip("-") or "watchlist"
+        slug = f"{base}-{secrets.token_hex(3)}"
+        link = SharedResourceLink.objects.create(
+            slug=slug,
+            resource_type='watchlist',
+            watchlist=wl,
+            created_by=request.user,
+        )
+        return Response({'success': True, 'slug': link.slug, 'url': f"/w/{link.slug}"})
+    except Exception as e:
+        logger.error(f"share_watchlist_create_link error: {e}", exc_info=True)
+        return Response({'success': False, 'message': 'Failed to create share link'}, status=500)
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def share_portfolio_create_link(request, portfolio_id: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'portfolio_id': portfolio_id}, status=501)
+    try:
+        from django.utils.text import slugify
+        import secrets
+        from .models import SharedResourceLink, UserPortfolio
+        p = UserPortfolio.objects.get(id=portfolio_id, user=request.user)
+
+        existing = SharedResourceLink.objects.filter(resource_type='portfolio', portfolio=p).first()
+        if existing:
+            # Ensure public flag is on
+            if not p.is_public:
+                p.is_public = True
+                p.save(update_fields=['is_public'])
+            return Response({'success': True, 'slug': existing.slug, 'url': f"/p/{existing.slug}"})
+
+        base = slugify(p.name)[:40].strip("-") or "portfolio"
+        slug = f"{base}-{secrets.token_hex(3)}"
+        link = SharedResourceLink.objects.create(
+            slug=slug,
+            resource_type='portfolio',
+            portfolio=p,
+            created_by=request.user,
+        )
+        p.is_public = True
+        p.save(update_fields=['is_public'])
+        return Response({'success': True, 'slug': link.slug, 'url': f"/p/{link.slug}"})
+    except Exception as e:
+        logger.error(f"share_portfolio_create_link error: {e}", exc_info=True)
+        return Response({'success': False, 'message': 'Failed to create share link'}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def share_portfolio_revoke_link(request, portfolio_id: str):
+    """Disable public sharing for a portfolio (keeps share links but marks portfolio private)."""
+    try:
+        from .models import UserPortfolio
+        p = UserPortfolio.objects.get(id=portfolio_id, user=request.user)
+        p.is_public = False
+        p.save(update_fields=['is_public'])
+        return Response({'success': True})
+    except Exception:
+        return Response({'success': False, 'message': 'Failed to revoke'}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def share_watchlist_revoke_link(request, watchlist_id: str):
+    """No is_public field for watchlists; this removes share links."""
+    try:
+        from .models import SharedResourceLink, UserWatchlist
+        wl = UserWatchlist.objects.get(id=watchlist_id, user=request.user)
+        SharedResourceLink.objects.filter(resource_type='watchlist', watchlist=wl).delete()
+        return Response({'success': True})
+    except Exception:
+        return Response({'success': False, 'message': 'Failed to revoke'}, status=500)

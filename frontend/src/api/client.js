@@ -528,6 +528,16 @@ export async function createShareLinkForPortfolio(id) {
   const { data } = await api.post(`/share/portfolios/${encodeURIComponent(id)}/create`);
   return data;
 }
+
+export async function revokeShareLinkForPortfolio(id) {
+  const { data } = await api.post(`/share/portfolios/${encodeURIComponent(id)}/revoke`);
+  return data;
+}
+
+export async function revokeShareLinkForWatchlist(id) {
+  const { data } = await api.post(`/share/watchlists/${encodeURIComponent(id)}/revoke`);
+  return data;
+}
 export async function filterStocks(params = {}) { 
   ensureApiQuotaAndIncrement('runScreener');
   const { data } = await api.get('/filter/', { params }); 

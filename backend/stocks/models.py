@@ -362,6 +362,49 @@ class UserPortfolio(models.Model):
             return (self.total_return / self.total_cost) * 100
         return 0
 
+
+class SharedResourceLink(models.Model):
+    """
+    Public share links for portfolios and watchlists.
+    Stored as a stable slug so URLs can be shared externally.
+    """
+    RESOURCE_CHOICES = [
+        ("portfolio", "Portfolio"),
+        ("watchlist", "Watchlist"),
+    ]
+
+    slug = models.SlugField(max_length=64, unique=True, db_index=True)
+    resource_type = models.CharField(max_length=20, choices=RESOURCE_CHOICES)
+
+    portfolio = models.ForeignKey(
+        UserPortfolio,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="share_links",
+    )
+    watchlist = models.ForeignKey(
+        "UserWatchlist",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="share_links",
+    )
+
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="shared_links")
+    created_at = models.DateTimeField(auto_now_add=True)
+    view_count = models.PositiveIntegerField(default=0)
+    last_viewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["resource_type", "slug"]),
+            models.Index(fields=["created_by", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.resource_type}:{self.slug}"
+
 class PortfolioHolding(models.Model):
     """Individual stock positions within portfolios"""
     portfolio = models.ForeignKey(UserPortfolio, on_delete=models.CASCADE, related_name='holdings')
