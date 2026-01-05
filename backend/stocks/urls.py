@@ -67,6 +67,8 @@ from . import education_api
 from . import social_trading_api
 from . import retention_api
 from . import system_api
+# Weekly challenges (viral engagement)
+from . import challenges_api
 # NEW MVP Feature APIs
 from . import ai_chat_api
 from . import enhanced_screener_api
@@ -362,6 +364,10 @@ urlpatterns = [
     path('education/indicators/<str:indicator_name>/', education_api.get_indicator_explanation, name='indicator_explanation'),
     path('education/walkthroughs/active/', education_api.get_active_walkthroughs, name='active_walkthroughs'),
     path('education/walkthroughs/<int:walkthrough_id>/start/', education_api.start_walkthrough, name='start_walkthrough'),
+
+    # Weekly challenges (Phase: Viral Engagement)
+    path('challenges/current/', challenges_api.get_current_challenge, name='current_challenge'),
+    path('challenges/leaderboard/', challenges_api.get_challenge_leaderboard, name='challenge_leaderboard'),
     path('education/walkthroughs/<int:walkthrough_id>/update/', education_api.update_walkthrough_step, name='update_walkthrough_step'),
     path('education/walkthroughs/<int:walkthrough_id>/dismiss/', education_api.dismiss_walkthrough, name='dismiss_walkthrough'),
     path('education/kb/search/', education_api.search_knowledge_base, name='search_knowledge_base'),

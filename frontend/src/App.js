@@ -73,6 +73,7 @@ const SharedPortfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/a
 const PublicProfile = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/PublicProfile"));
 const PublicBacktestShare = lazy(() => import(/* webpackPrefetch: true */ "./pages/PublicBacktestShare"));
 const StrategyLeaderboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StrategyLeaderboard"));
+const EmbedBacktest = lazy(() => import(/* webpackPrefetch: true */ "./pages/EmbedBacktest"));
 import WatchlistDetail from "./pages/app/WatchlistDetail";
 
 // Education Pages (Phase 7)
@@ -286,6 +287,7 @@ function App() {
                   <Route path="/u/:username" element={<PublicProfile />} />
                   <Route path="/share/backtest/:backtest_id" element={<PublicBacktestShare />} />
                   <Route path="/backtest/:shareSlug" element={<PublicBacktestShare />} />
+                  <Route path="/embed/backtest/:slug" element={<EmbedBacktest />} />
 
                   {/* Marketing Pages - Using placeholders */}
                   <Route path="/product" element={<PlaceholderPage title="Product" />} />

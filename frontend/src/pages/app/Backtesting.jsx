@@ -10,8 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Progress } from "../../components/ui/progress";
+import { Checkbox } from "../../components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import * as htmlToImage from 'html-to-image';
 import { QRCodeCanvas } from "qrcode.react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import {
   Brain,
   Play,
@@ -37,7 +41,9 @@ import {
   Copy,
   Check,
   Download,
-  Image
+  Image,
+  FileText,
+  Code
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -162,7 +168,7 @@ const StrategyCard = ({ strategy, onSelect, selected }) => (
 );
 
 // Backtest History Item
-const BacktestHistoryItem = ({ backtest, onView }) => {
+const BacktestHistoryItem = ({ backtest, onView, selectedForCompare, onToggleCompare }) => {
   const statusColors = {
     completed: "bg-green-100 text-green-700",
     pending: "bg-yellow-100 text-yellow-700",
@@ -173,7 +179,18 @@ const BacktestHistoryItem = ({ backtest, onView }) => {
   return (
     <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onView(backtest)}>
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-3">
+          <button
+            type="button"
+            className="mt-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleCompare?.(backtest.id);
+            }}
+            aria-label="Select for comparison"
+          >
+            <Checkbox checked={!!selectedForCompare} />
+          </button>
           <div>
             <h4 className="font-semibold">{backtest.name}</h4>
             <p className="text-sm text-gray-500">{CATEGORY_LABELS[backtest.category]}</p>
@@ -227,6 +244,13 @@ export default function Backtesting() {
   const [exportPreset, setExportPreset] = useState("twitter");
   const [achievementQueue, setAchievementQueue] = useState([]);
   const [activeAchievement, setActiveAchievement] = useState(null);
+  const [selectedCompareIds, setSelectedCompareIds] = useState([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareBacktests, setCompareBacktests] = useState([]);
+  const [pdfExporting, setPdfExporting] = useState(false);
+  const [embedOpen, setEmbedOpen] = useState(false);
+  const [weeklyChallenge, setWeeklyChallenge] = useState(null);
 
   // Ref for export functionality
   const resultsCardRef = useRef(null);
@@ -421,9 +445,107 @@ Learn from my mistakes 👉 ${shareUrl}`;
     }
   };
 
+  const exportToPDF = async () => {
+    if (!exportCardRef.current) {
+      toast.error("Results not available for export");
+      return;
+    }
+
+    setPdfExporting(true);
+    try {
+      if (currentBacktest) {
+        await ensurePublicShare(currentBacktest);
+      }
+
+      const canvas = await html2canvas(exportCardRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/png", 1.0);
+      const orientation = exportConfig.width >= exportConfig.height ? "landscape" : "portrait";
+      const pdf = new jsPDF({
+        orientation,
+        unit: "px",
+        format: [exportConfig.width, exportConfig.height],
+        compress: true,
+      });
+
+      pdf.addImage(imgData, "PNG", 0, 0, exportConfig.width, exportConfig.height, undefined, "FAST");
+      pdf.save(`${currentBacktest?.name || "backtest"}-${exportConfig.id}-tradescanpro.pdf`);
+
+      trackAnalyticsEvent("backtest_pdf_exported", {
+        backtest_id: currentBacktest?.id,
+        preset: exportConfig.id,
+      });
+      matomoTrackEvent("Backtesting", "ExportPDF", exportConfig.id, 1);
+      toast.success("PDF exported successfully!");
+    } catch (e) {
+      toast.error("Failed to export PDF");
+    } finally {
+      setPdfExporting(false);
+    }
+  };
+
+  const generateViralHeadline = (backtest) => {
+    const r = backtest?.results || {};
+    const name = backtest?.name || "my strategy";
+    const totalReturn = Number(r.total_return ?? 0);
+    const sharpe = Number(r.sharpe_ratio ?? 0);
+    const win = Number(r.win_rate ?? 0);
+    const grade = r.quality_grade || "";
+
+    const templates = [
+      totalReturn >= 50 ? `This "${name}" strategy returned ${totalReturn.toFixed(1)}% 🚀` : null,
+      totalReturn >= 20 ? `I backtested "${name}" — up ${totalReturn.toFixed(1)}% 📈` : null,
+      grade ? `"${name}" got a ${grade} grade in AI backtesting` : null,
+      sharpe >= 2 ? `"${name}" hit Sharpe ${sharpe.toFixed(2)} (risk-adjusted beast)` : null,
+      win >= 70 ? `"${name}" has a ${win.toFixed(1)}% win rate — would you trade this?` : null,
+      totalReturn < 0 ? `I backtested "${name}" and it lost ${totalReturn.toFixed(1)}% — here’s what I learned` : null,
+      `I backtested "${name}" with AI — results inside 👇`,
+    ].filter(Boolean);
+
+    return templates[0] || `I backtested "${name}" with AI — results inside 👇`;
+  };
+
+  const copyHeadline = async () => {
+    try {
+      const headline = generateViralHeadline(currentBacktest);
+      await navigator.clipboard.writeText(headline);
+      toast.success("Headline copied!");
+      trackAnalyticsEvent("backtest_headline_copied", { backtest_id: currentBacktest?.id });
+      matomoTrackEvent("Backtesting", "CopyHeadline", "copied", 1);
+    } catch {
+      toast.error("Failed to copy headline");
+    }
+  };
+
+  const getEmbedCode = () => {
+    const origin = window.location.origin;
+    const slug = currentBacktest?.share_slug;
+    const src = slug ? `${origin}/embed/backtest/${encodeURIComponent(slug)}` : getShareUrl(currentBacktest);
+    return `<iframe src="${src}" width="600" height="420" style="border:0;border-radius:12px;overflow:hidden" loading="lazy" title="TradeScanPro Backtest"></iframe>`;
+  };
+
   // Load backtest history
   useEffect(() => {
     loadBacktestHistory();
+  }, []);
+
+  // Load weekly challenge
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/challenges/current/`);
+        const data = await res.json();
+        if (data?.success) setWeeklyChallenge(data.challenge);
+      } catch {
+        // ignore
+      }
+    };
+    load();
   }, []);
 
   const loadBacktestHistory = async () => {
@@ -534,6 +656,49 @@ Learn from my mistakes 👉 ${shareUrl}`;
     }
   };
 
+  const toggleCompareSelection = (id) => {
+    setSelectedCompareIds((prev) => {
+      const current = Array.isArray(prev) ? prev : [];
+      if (current.includes(id)) return current.filter((x) => x !== id);
+      if (current.length >= 2) return current; // max 2
+      return [...current, id];
+    });
+  };
+
+  const clearCompareSelection = () => setSelectedCompareIds([]);
+
+  const openCompare = async () => {
+    if (selectedCompareIds.length !== 2) {
+      toast.error("Select exactly 2 backtests to compare");
+      return;
+    }
+    setCompareLoading(true);
+    try {
+      const [a, b] = await Promise.all(selectedCompareIds.map((id) => getBacktest(id)));
+      if (!a?.success || !b?.success) {
+        toast.error("Failed to load backtests for comparison");
+        return;
+      }
+      setCompareBacktests([a.backtest, b.backtest]);
+      setCompareOpen(true);
+    } catch (e) {
+      toast.error("Failed to load comparison");
+    } finally {
+      setCompareLoading(false);
+    }
+  };
+
+  const buildComparisonEquityData = (a, b) => {
+    const aa = a?.equity_curve || [];
+    const bb = b?.equity_curve || [];
+    const n = Math.max(aa.length, bb.length);
+    return Array.from({ length: n }, (_, i) => ({
+      day: i + 1,
+      a: aa[i] ?? null,
+      b: bb[i] ?? null,
+    }));
+  };
+
   // Format equity curve for chart
   const equityCurveData = currentBacktest?.equity_curve?.map((value, index) => ({
     day: index,
@@ -573,6 +738,28 @@ Learn from my mistakes 👉 ${shareUrl}`;
             </Button>
           </div>
         </div>
+
+        {weeklyChallenge && (
+          <Card className="mt-4 border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
+            <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-purple-800">This week’s challenge</div>
+                <div className="text-lg font-bold text-gray-900">{weeklyChallenge.title}</div>
+                <div className="text-sm text-gray-600">
+                  Target: {weeklyChallenge.target?.threshold}{weeklyChallenge.target?.unit} {weeklyChallenge.target?.metric?.replace(/_/g, " ")}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={() => navigate("/app/backtesting")}>
+                  Enter Challenge
+                </Button>
+                <Button variant="outline" onClick={() => window.open("/api/challenges/leaderboard/", "_blank")}>
+                  View Leaderboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -903,6 +1090,32 @@ Learn from my mistakes 👉 ${shareUrl}`;
                 />
               </div>
 
+              {/* Suggested viral headline */}
+              <Card className="border-2 border-purple-100 bg-gradient-to-r from-purple-50/60 to-pink-50/60">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-purple-600" />
+                      Suggested Share Headline
+                    </span>
+                    <Button variant="outline" size="sm" onClick={copyHeadline}>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy
+                    </Button>
+                  </CardTitle>
+                  <CardDescription>
+                    Use this headline to improve click-through when sharing.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="p-4 bg-white rounded-lg border border-dashed border-purple-200">
+                    <p className="text-base font-semibold text-gray-900">
+                      {generateViralHeadline(currentBacktest)}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Social Sharing Section */}
               <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
                 <CardHeader>
@@ -956,7 +1169,7 @@ Learn from my mistakes 👉 ${shareUrl}`;
                   </div>
 
                   {/* Share Buttons */}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                     <Button
                       variant="outline"
                       className="w-full hover:bg-blue-50 hover:border-blue-300 transition-all"
@@ -1016,6 +1229,25 @@ Learn from my mistakes 👉 ${shareUrl}`;
                         </>
                       )}
                     </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full hover:bg-purple-50 hover:border-purple-300 transition-all"
+                      onClick={exportToPDF}
+                      disabled={pdfExporting}
+                    >
+                      {pdfExporting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 text-purple-500 animate-spin" />
+                          PDF…
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-4 w-4 mr-2 text-purple-600" />
+                          Export PDF
+                        </>
+                      )}
+                    </Button>
                   </div>
 
                   {/* Share Preview */}
@@ -1034,6 +1266,23 @@ Learn from my mistakes 👉 ${shareUrl}`;
                       <Share2 className="h-3 w-3" />
                       <span>Share to grow the community</span>
                     </div>
+                  </div>
+
+                  {/* Embed */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+                    <div className="text-xs text-gray-600">
+                      Want to embed this result on a blog or website?
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        await ensurePublicShare(currentBacktest);
+                        setEmbedOpen(true);
+                      }}
+                    >
+                      <Code className="h-4 w-4 mr-2" />
+                      Embed
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -1366,6 +1615,36 @@ Learn from my mistakes 👉 ${shareUrl}`;
               <CardDescription>View your past backtest results</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div className="text-sm text-gray-600">
+                  Select 2 items to compare. ({selectedCompareIds.length}/2 selected)
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    disabled={selectedCompareIds.length === 0}
+                    onClick={clearCompareSelection}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    disabled={selectedCompareIds.length !== 2 || compareLoading}
+                    onClick={openCompare}
+                  >
+                    {compareLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Loading…
+                      </>
+                    ) : (
+                      <>
+                        Compare
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               {historyLoading ? (
                 <div className="flex items-center justify-center p-8">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
@@ -1377,6 +1656,8 @@ Learn from my mistakes 👉 ${shareUrl}`;
                       key={backtest.id}
                       backtest={backtest}
                       onView={handleViewBacktest}
+                      selectedForCompare={selectedCompareIds.includes(backtest.id)}
+                      onToggleCompare={toggleCompareSelection}
                     />
                   ))}
                 </div>
@@ -1391,6 +1672,136 @@ Learn from my mistakes 👉 ${shareUrl}`;
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Comparison dialog */}
+      <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Strategy Comparison</DialogTitle>
+            <DialogDescription>
+              Side-by-side comparison of two backtests.
+            </DialogDescription>
+          </DialogHeader>
+
+          {compareBacktests.length === 2 ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {compareBacktests.map((bt, idx) => (
+                  <Card key={bt.id}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between gap-3">
+                        <span className="truncate">{bt.name}</span>
+                        <Badge variant="outline">{bt.results?.quality_grade || "N/A"}</Badge>
+                      </CardTitle>
+                      <CardDescription>
+                        {CATEGORY_LABELS[bt.category]} • {bt.symbols?.join(", ")}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg border">
+                        <div className="text-xs text-gray-500">Total return</div>
+                        <div className="text-xl font-bold">
+                          {bt.results?.total_return >= 0 ? "+" : ""}{bt.results?.total_return?.toFixed(2) || 0}%
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg border">
+                        <div className="text-xs text-gray-500">Composite score</div>
+                        <div className="text-xl font-bold">
+                          {bt.results?.composite_score?.toFixed(1) || 0}/100
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg border">
+                        <div className="text-xs text-gray-500">Sharpe</div>
+                        <div className="text-xl font-bold">
+                          {bt.results?.sharpe_ratio?.toFixed(2) || "0.00"}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg border">
+                        <div className="text-xs text-gray-500">Max drawdown</div>
+                        <div className="text-xl font-bold">
+                          {bt.results?.max_drawdown?.toFixed(2) || 0}%
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg border">
+                        <div className="text-xs text-gray-500">Win rate</div>
+                        <div className="text-xl font-bold">
+                          {bt.results?.win_rate?.toFixed(1) || 0}%
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg border">
+                        <div className="text-xs text-gray-500">Profit factor</div>
+                        <div className="text-xl font-bold">
+                          {bt.results?.profit_factor?.toFixed(2) || "0.00"}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Overlay equity curves */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <LineChart className="h-5 w-5 text-blue-500" />
+                    Equity Curves (Overlay)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[320px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsLineChart data={buildComparisonEquityData(compareBacktests[0], compareBacktests[1])}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="day" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="a" stroke="#3B82F6" dot={false} name={compareBacktests[0].name} />
+                        <Line type="monotone" dataKey="b" stroke="#10B981" dot={false} name={compareBacktests[1].name} />
+                      </RechartsLineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-600">Select 2 backtests to compare.</div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Embed dialog */}
+      <Dialog open={embedOpen} onOpenChange={setEmbedOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Embed this backtest</DialogTitle>
+            <DialogDescription>
+              Copy the iframe code below and paste it into your site.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Textarea readOnly rows={4} value={getEmbedCode()} />
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(getEmbedCode());
+                    toast.success("Embed code copied!");
+                    trackAnalyticsEvent("backtest_embed_copied", { backtest_id: currentBacktest?.id });
+                    matomoTrackEvent("Backtesting", "Embed", "copied", 1);
+                  } catch {
+                    toast.error("Failed to copy embed code");
+                  }
+                }}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy code
+              </Button>
+              <Button onClick={() => setEmbedOpen(false)}>Done</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* AI Disclaimer */}
       <Alert className="mt-6 bg-blue-50 border-blue-200">
