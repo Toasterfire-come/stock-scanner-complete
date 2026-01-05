@@ -322,6 +322,11 @@ urlpatterns = [
     path('backtesting/list/', backtesting_api.list_backtests, name='list_backtests'),
     path('backtesting/baseline-strategies/', backtesting_api.list_baseline_strategies, name='baseline_strategies'),
     path('backtesting/limits/', backtesting_api.get_backtest_limits, name='backtest_limits'),
+
+    # Backtest public sharing (Phase 8)
+    path('share/backtests/<int:backtest_id>/create', backtesting_api.create_backtest_share_link, name='share_backtest_create_link'),
+    path('share/backtests/<int:backtest_id>/revoke', backtesting_api.revoke_backtest_share_link, name='share_backtest_revoke_link'),
+    path('share/backtests/<str:slug>/', backtesting_api.get_shared_backtest, name='share_backtest_public'),
     
     # Achievement endpoints (Gamification)
     path('achievements/', achievements_api.get_achievements, name='get_achievements'),

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -10,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Progress } from "../../components/ui/progress";
 import * as htmlToImage from 'html-to-image';
+import { QRCodeCanvas } from "qrcode.react";
 import {
   Brain,
   Play,
@@ -43,7 +45,9 @@ import {
   runBacktest, 
   getBacktest, 
   listBacktests, 
-  getBaselineStrategies 
+  getBaselineStrategies,
+  shareBacktest,
+  revokeSharedBacktest
 } from "../../api/client";
 import { 
   LineChart as RechartsLineChart, 
@@ -58,6 +62,8 @@ import {
 } from "recharts";
 import SEO from "../../components/SEO";
 import logger from '../../lib/logger';
+import { trackEvent as trackAnalyticsEvent, matomoTrackEvent } from "../../lib/analytics";
+import AchievementUnlock from "../../components/AchievementUnlock";
 
 // Baseline strategy templates
 const BASELINE_STRATEGIES = {
@@ -196,6 +202,7 @@ const BacktestHistoryItem = ({ backtest, onView }) => {
 };
 
 export default function Backtesting() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("create");
   const [category, setCategory] = useState("swing_trading");
   const [strategyText, setStrategyText] = useState("");
@@ -217,19 +224,40 @@ export default function Backtesting() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportPreset, setExportPreset] = useState("twitter");
+  const [achievementQueue, setAchievementQueue] = useState([]);
+  const [activeAchievement, setActiveAchievement] = useState(null);
 
   // Ref for export functionality
   const resultsCardRef = useRef(null);
+  const exportCardRef = useRef(null);
+  const exportShareUrlRef = useRef("");
+
+  const EXPORT_PRESETS = {
+    twitter: { id: "twitter", label: "Twitter/X (1200×628)", width: 1200, height: 628 },
+    instagram_square: { id: "instagram_square", label: "Instagram (1080×1080)", width: 1080, height: 1080 },
+  };
+
+  const exportConfig = EXPORT_PRESETS[exportPreset] || EXPORT_PRESETS.twitter;
 
   // Share helper functions
   const getShareUrl = (backtest) => {
-    // Use dedicated public share page for viral sharing
-    return `${window.location.origin}/share/backtest/${backtest.id}`;
+    const origin = window.location.origin;
+    // Prefer stable slug URL when available
+    if (backtest?.share_slug) return `${origin}/backtest/${backtest.share_slug}`;
+    return `${origin}/share/backtest/${backtest.id}`;
   };
 
-  const generateShareText = (backtest) => {
+  const getShareUrlForExport = (backtest) => {
+    if (!backtest) return "";
+    if (backtest.share_slug) return getShareUrl(backtest);
+    return exportShareUrlRef.current || getShareUrl(backtest);
+  };
+
+  const generateShareText = (backtest, shareUrlOverride) => {
     const { total_return, win_rate, sharpe_ratio, total_trades } = backtest.results || {};
     const emoji = total_return >= 50 ? "🚀" : total_return >= 20 ? "📈" : total_return >= 0 ? "✅" : "📉";
+    const shareUrl = shareUrlOverride || getShareUrl(backtest);
 
     if (total_return >= 0) {
       return `I just backtested "${backtest.name}" on @TradeScanPro and got +${total_return?.toFixed(1)}% returns ${emoji}
@@ -238,7 +266,7 @@ Win rate: ${win_rate?.toFixed(1)}%
 Sharpe: ${sharpe_ratio?.toFixed(2)}
 Trades: ${total_trades}
 
-Try it yourself 👉 ${getShareUrl(backtest)}`;
+Try it yourself 👉 ${shareUrl}`;
     } else {
       return `I tested "${backtest.name}" on @TradeScanPro ${emoji}
 
@@ -246,40 +274,89 @@ Return: ${total_return?.toFixed(1)}%
 Win rate: ${win_rate?.toFixed(1)}%
 Trades: ${total_trades}
 
-Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
+Learn from my mistakes 👉 ${shareUrl}`;
     }
   };
 
-  const shareToTwitter = (backtest) => {
-    const text = generateShareText(backtest);
+  const ensurePublicShare = async (backtest) => {
+    if (!backtest) return "";
+    if (backtest.is_public && backtest.share_slug) return getShareUrl(backtest);
+
+    try {
+      const data = await shareBacktest(backtest.id);
+      if (data?.success) {
+        const slug = data.slug || data.share_slug;
+        const shareUrl = data.share_url ? `${window.location.origin}${data.share_url}` : `${window.location.origin}/backtest/${slug}`;
+        exportShareUrlRef.current = shareUrl;
+        // Update local state to reflect public status + slug
+        setCurrentBacktest((prev) => {
+          if (!prev || prev.id !== backtest.id) return prev;
+          return { ...prev, is_public: true, share_slug: slug };
+        });
+        return shareUrl;
+      }
+    } catch (e) {
+      logger.warn("Failed to create share link", e);
+    }
+
+    return getShareUrl(backtest);
+  };
+
+  const setPrivateShare = async (backtest) => {
+    if (!backtest) return;
+    try {
+      const data = await revokeSharedBacktest(backtest.id);
+      if (data?.success) {
+        setCurrentBacktest((prev) => {
+          if (!prev || prev.id !== backtest.id) return prev;
+          return { ...prev, is_public: false };
+        });
+        toast.success("Backtest is now private");
+      } else {
+        toast.error(data?.error || "Failed to make private");
+      }
+    } catch (e) {
+      toast.error("Failed to make private");
+    }
+  };
+
+  const shareToTwitter = async (backtest) => {
+    const shareUrl = await ensurePublicShare(backtest);
+    const text = generateShareText(backtest, shareUrl);
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank", "width=550,height=420");
 
     // Track share event
     logger.info("Shared to Twitter", { backtest_id: backtest.id });
+    trackAnalyticsEvent("backtest_shared", { platform: "twitter", backtest_id: backtest.id });
+    matomoTrackEvent("Backtesting", "Share", "twitter", 1);
   };
 
-  const shareToLinkedIn = (backtest) => {
-    const url = getShareUrl(backtest);
-    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+  const shareToLinkedIn = async (backtest) => {
+    const shareUrl = await ensurePublicShare(backtest);
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
     window.open(linkedInUrl, "_blank", "width=550,height=420");
 
     // Track share event
     logger.info("Shared to LinkedIn", { backtest_id: backtest.id });
+    trackAnalyticsEvent("backtest_shared", { platform: "linkedin", backtest_id: backtest.id });
+    matomoTrackEvent("Backtesting", "Share", "linkedin", 1);
   };
 
-  const shareToReddit = (backtest) => {
-    const text = generateShareText(backtest);
-    const url = getShareUrl(backtest);
-    const redditUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(backtest.name + " - Backtest Results")}`;
+  const shareToReddit = async (backtest) => {
+    const shareUrl = await ensurePublicShare(backtest);
+    const redditUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(backtest.name + " - Backtest Results")}`;
     window.open(redditUrl, "_blank", "width=550,height=420");
 
     // Track share event
     logger.info("Shared to Reddit", { backtest_id: backtest.id });
+    trackAnalyticsEvent("backtest_shared", { platform: "reddit", backtest_id: backtest.id });
+    matomoTrackEvent("Backtesting", "Share", "reddit", 1);
   };
 
   const copyShareLink = async (backtest) => {
-    const text = generateShareText(backtest);
+    const shareUrl = await ensurePublicShare(backtest);
+    const text = generateShareText(backtest, shareUrl);
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -288,6 +365,8 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
 
       // Track copy event
       logger.info("Copied share link", { backtest_id: backtest.id });
+      trackAnalyticsEvent("backtest_share_copied", { backtest_id: backtest.id });
+      matomoTrackEvent("Backtesting", "Share", "copy", 1);
     } catch (err) {
       toast.error("Failed to copy");
     }
@@ -295,29 +374,45 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
 
   // Image export function
   const exportToImage = async () => {
-    if (!resultsCardRef.current) {
+    if (!exportCardRef.current) {
       toast.error("Results not available for export");
       return;
     }
 
     setExporting(true);
     try {
-      const dataUrl = await htmlToImage.toPng(resultsCardRef.current, {
-        quality: 0.95,
+      // Ensure the QR code points to an actually public page
+      if (currentBacktest) {
+        await ensurePublicShare(currentBacktest);
+      }
+
+      const dataUrl = await htmlToImage.toPng(exportCardRef.current, {
+        quality: 0.98,
         pixelRatio: 2, // Higher resolution for better quality
-        backgroundColor: '#ffffff'
+        backgroundColor: "#ffffff",
+        width: exportConfig.width,
+        height: exportConfig.height,
+        style: {
+          width: `${exportConfig.width}px`,
+          height: `${exportConfig.height}px`,
+        },
       });
 
       // Create download link
       const link = document.createElement('a');
-      link.download = `${currentBacktest?.name || 'backtest'}-results-tradescanpro.png`;
+      link.download = `${currentBacktest?.name || 'backtest'}-${exportConfig.id}-tradescanpro.png`;
       link.href = dataUrl;
       link.click();
 
       toast.success("Image exported successfully!");
 
       // Track export event
-      logger.info("Exported backtest image", { backtest_id: currentBacktest?.id });
+      logger.info("Exported backtest image", { backtest_id: currentBacktest?.id, preset: exportConfig.id });
+      trackAnalyticsEvent("backtest_image_exported", {
+        backtest_id: currentBacktest?.id,
+        preset: exportConfig.id,
+      });
+      matomoTrackEvent("Backtesting", "Export", exportConfig.id, 1);
     } catch (err) {
       console.error('Export failed:', err);
       toast.error("Failed to export image");
@@ -393,6 +488,12 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
         return;
       }
 
+      // Show achievement unlocks (if any)
+      if (Array.isArray(runResponse.achievements_unlocked) && runResponse.achievements_unlocked.length > 0) {
+        setAchievementQueue(runResponse.achievements_unlocked);
+        setActiveAchievement(runResponse.achievements_unlocked[0]);
+      }
+
       // Get full results
       const resultResponse = await getBacktest(createResponse.backtest_id);
       
@@ -410,6 +511,15 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
       setIsLoading(false);
       setIsRunning(false);
     }
+  };
+
+  const handleCloseAchievement = () => {
+    setAchievementQueue((prev) => {
+      const queue = Array.isArray(prev) ? prev : [];
+      const next = queue.slice(1);
+      setActiveAchievement(next.length > 0 ? next[0] : null);
+      return next;
+    });
   };
 
   const handleViewBacktest = async (backtest) => {
@@ -439,19 +549,30 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
 
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-            <Brain className="h-6 w-6 text-white" />
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">AI Backtesting</h1>
-            <p className="text-gray-500">Test your trading strategies with AI-powered analysis</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                <Brain className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">AI Backtesting</h1>
+                <p className="text-gray-500">Test your trading strategies with AI-powered analysis</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="mt-2">
+              <Sparkles className="h-3 w-3 mr-1" />
+              Powered by Groq AI
+            </Badge>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate("/strategies/leaderboard")}>
+              <Trophy className="h-4 w-4 mr-2 text-yellow-600" />
+              Strategy Leaderboard
+            </Button>
           </div>
         </div>
-        <Badge variant="outline" className="mt-2">
-          <Sparkles className="h-3 w-3 mr-1" />
-          Powered by Groq AI
-        </Badge>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -631,6 +752,93 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
         <TabsContent value="results" className="space-y-6">
           {currentBacktest ? (
             <div ref={resultsCardRef}>
+              {/* Offscreen export template (fixed size for social) */}
+              <div
+                className="fixed left-[-10000px] top-0"
+                style={{ width: exportConfig.width, height: exportConfig.height }}
+                aria-hidden="true"
+              >
+                <div
+                  ref={exportCardRef}
+                  style={{ width: exportConfig.width, height: exportConfig.height }}
+                  className="bg-white overflow-hidden border border-gray-200"
+                >
+                  <div className="h-full w-full flex flex-col">
+                    {/* Header */}
+                    <div className="px-10 pt-8 pb-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="text-sm font-semibold tracking-wide opacity-90">TradeScanPro</div>
+                          <div className="text-3xl font-bold leading-tight mt-1">
+                            {currentBacktest.name}
+                          </div>
+                          <div className="text-sm opacity-90 mt-2">
+                            {CATEGORY_LABELS[currentBacktest.category]} • {currentBacktest.symbols?.join(", ")}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl p-3 shadow-sm">
+                          <QRCodeCanvas
+                            value={getShareUrlForExport(currentBacktest)}
+                            size={exportConfig.id === "twitter" ? 120 : 140}
+                            includeMargin
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className="flex-1 px-10 py-8">
+                      <div className="grid grid-cols-4 gap-4">
+                        <div className="rounded-xl border border-gray-200 p-4">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Return</div>
+                          <div className={`text-3xl font-bold mt-2 ${currentBacktest.results?.total_return >= 0 ? "text-green-600" : "text-red-600"}`}>
+                            {currentBacktest.results?.total_return >= 0 ? "+" : ""}{currentBacktest.results?.total_return?.toFixed(1) || 0}%
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-gray-200 p-4">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Sharpe</div>
+                          <div className="text-3xl font-bold mt-2 text-gray-900">
+                            {currentBacktest.results?.sharpe_ratio?.toFixed(2) || "0.00"}
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-gray-200 p-4">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Win Rate</div>
+                          <div className="text-3xl font-bold mt-2 text-gray-900">
+                            {currentBacktest.results?.win_rate?.toFixed(1) || 0}%
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-gray-200 p-4">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quality</div>
+                          <div className="text-3xl font-bold mt-2 text-gray-900">
+                            {currentBacktest.results?.quality_grade || "N/A"}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {currentBacktest.results?.composite_score?.toFixed(1) || 0}/100
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-8 rounded-xl bg-gray-50 border border-gray-200 p-5">
+                        <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Share text</div>
+                        <div className="text-sm text-gray-700 whitespace-pre-line font-mono">
+                          {generateShareText(currentBacktest)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-10 py-5 border-t border-gray-200 flex items-center justify-between">
+                      <div className="text-sm text-gray-600">
+                        Scan. Backtest. Improve.
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        TradeScanPro.com
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Results Header */}
               <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-0">
                 <CardContent className="p-6">
@@ -707,6 +915,46 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Public/private toggle */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={currentBacktest.is_public ? "border-green-300 text-green-700 bg-green-50" : "border-gray-300 text-gray-700 bg-white"}>
+                        {currentBacktest.is_public ? "Public" : "Private"}
+                      </Badge>
+                      <span className="text-xs text-gray-600">
+                        {currentBacktest.is_public ? "Anyone with the link can view." : "Only you can view."}
+                      </span>
+                    </div>
+                    {currentBacktest.is_public ? (
+                      <Button variant="outline" size="sm" onClick={() => setPrivateShare(currentBacktest)}>
+                        Make Private
+                      </Button>
+                    ) : (
+                      <Button size="sm" onClick={() => ensurePublicShare(currentBacktest).then(() => toast.success("Public share link created"))}>
+                        Make Public Link
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Export preset */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="w-full sm:w-[280px]">
+                      <Select value={exportPreset} onValueChange={setExportPreset}>
+                        <SelectTrigger>
+                          <Image className="h-4 w-4 mr-2 text-purple-600" />
+                          <SelectValue placeholder="Export preset" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="twitter">{EXPORT_PRESETS.twitter.label}</SelectItem>
+                          <SelectItem value="instagram_square">{EXPORT_PRESETS.instagram_square.label}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Includes a QR code linking to the public share page.
+                    </div>
+                  </div>
+
                   {/* Share Buttons */}
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                     <Button
@@ -1152,6 +1400,14 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
           AI-generated strategies should be reviewed carefully before live trading.
         </AlertDescription>
       </Alert>
+
+      {/* Achievement unlock modal */}
+      {activeAchievement && (
+        <AchievementUnlock
+          achievement={activeAchievement}
+          onClose={handleCloseAchievement}
+        />
+      )}
     </div>
   );
 }

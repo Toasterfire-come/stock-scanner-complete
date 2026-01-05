@@ -989,7 +989,10 @@ class BacktestRun(models.Model):
     equity_curve = models.JSONField(null=True, blank=True, help_text="Portfolio value over time")
     
     # Visibility & Sharing
-    is_public = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=False, help_text="Whether this backtest is publicly shareable")
+    share_slug = models.SlugField(max_length=64, unique=True, null=True, blank=True, db_index=True, help_text="Public share slug (stable URL)")
+    public_view_count = models.PositiveIntegerField(default=0, help_text="Public page views")
+    shared_at = models.DateTimeField(null=True, blank=True, help_text="When backtest was first made public")
     is_baseline = models.BooleanField(default=False, help_text="Official baseline strategy")
     
     # Timestamps

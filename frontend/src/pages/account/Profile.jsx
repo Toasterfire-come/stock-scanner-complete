@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
 import { User, Mail, Calendar, Crown, Check, Loader2 } from "lucide-react";
 import { getProfile, updateProfile as updateProfileApi } from "../../api/client";
+import AchievementsDisplay from "../../components/AchievementsDisplay";
 
 export default function Profile() {
   const { user, updateUser, isLoading } = useAuth();
@@ -141,7 +142,7 @@ export default function Profile() {
         </div>
 
         {/* Profile Form */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Account Information</CardTitle>
@@ -231,6 +232,18 @@ export default function Profile() {
                   )}
                 </div>
               </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Achievements</CardTitle>
+              <CardDescription>
+                Your progress and unlocks from backtesting and sharing.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AchievementsDisplay />
             </CardContent>
           </Card>
         </div>

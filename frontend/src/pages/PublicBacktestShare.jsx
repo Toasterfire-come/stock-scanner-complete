@@ -25,20 +25,27 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 export default function PublicBacktestShare() {
-  const { backtest_id } = useParams();
+  const { backtest_id, shareSlug } = useParams();
   const navigate = useNavigate();
   const [backtest, setBacktest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const idOrSlug = shareSlug || backtest_id;
+  const isNumericId = /^\d+$/.test(String(idOrSlug || ""));
+
   useEffect(() => {
     fetchPublicBacktest();
-  }, [backtest_id]);
+  }, [idOrSlug]);
 
   const fetchPublicBacktest = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/backtest/public/${backtest_id}/`);
+      const endpoint = isNumericId
+        ? `${API_BASE_URL}/api/backtesting/public/${idOrSlug}/`
+        : `${API_BASE_URL}/api/share/backtests/${encodeURIComponent(idOrSlug)}/`;
+
+      const response = await fetch(endpoint);
       const data = await response.json();
 
       if (!data.success) {
@@ -97,6 +104,15 @@ export default function PublicBacktestShare() {
   const copyShareLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied to clipboard!");
+  };
+
+  const copyStrategyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(backtest?.strategy_text || "");
+      toast.success("Strategy prompt copied!");
+    } catch {
+      toast.error("Failed to copy strategy prompt");
+    }
   };
 
   if (loading) {
@@ -197,6 +213,11 @@ export default function PublicBacktestShare() {
                     {qualityGrade}
                   </Badge>
                 </div>
+                {backtest.creator?.username && (
+                  <div className="text-sm text-gray-500 mb-2">
+                    by <a className="underline" href={`/u/${encodeURIComponent(backtest.creator.username)}`}>@{backtest.creator.username}</a>
+                  </div>
+                )}
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <Target className="h-4 w-4" />
@@ -214,7 +235,10 @@ export default function PublicBacktestShare() {
               </div>
 
               {/* Share Buttons */}
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={copyStrategyPrompt}>
+                  Copy Strategy
+                </Button>
                 <Button variant="outline" size="sm" onClick={shareToTwitter}>
                   <Twitter className="h-4 w-4 text-blue-500" />
                 </Button>

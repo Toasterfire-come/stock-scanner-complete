@@ -6,8 +6,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.utils.text import slugify
 from datetime import datetime, timedelta
 import json
+import secrets
 from .models import BacktestRun, BaselineStrategy
 # Use Groq-powered service instead of static
 try:
@@ -21,6 +23,22 @@ BACKTEST_LIMITS = {
     'plus': -1,  # Unlimited (Plus plan - $24.99/mo)
     # Note: No free tier - subscription required to use backtesting
 }
+
+def _generate_unique_backtest_share_slug(backtest: BacktestRun) -> str:
+    """
+    Generate a unique, human-readable share slug.
+    Example: "ema-crossover-1a2b3c"
+    """
+    base = slugify(backtest.name or "backtest")[:48].strip("-") or "backtest"
+    # Try a few times to avoid (rare) collisions
+    for _ in range(10):
+        token = secrets.token_hex(3)  # 6 hex chars
+        slug = f"{base}-{token}"
+        if not BacktestRun.objects.filter(share_slug=slug).exists():
+            return slug
+    # Fallback: longer token
+    token = secrets.token_hex(8)
+    return f"{base}-{token}"
 
 
 def get_user_backtest_limit(user):
@@ -246,6 +264,9 @@ def get_backtest(request, backtest_id):
                 'initial_capital': float(backtest.initial_capital),
                 'status': backtest.status,
                 'error_message': backtest.error_message,
+                'is_public': bool(backtest.is_public),
+                'share_slug': backtest.share_slug,
+                'public_view_count': backtest.public_view_count,
                 'results': {
                     'total_return': float(backtest.total_return) if backtest.total_return else None,
                     'annualized_return': float(backtest.annualized_return) if backtest.annualized_return else None,
@@ -298,6 +319,9 @@ def list_backtests(request):
                     'name': b.name,
                     'category': b.category,
                     'status': b.status,
+                    'is_public': bool(b.is_public),
+                    'share_slug': b.share_slug,
+                    'public_view_count': b.public_view_count,
                     'composite_score': float(b.composite_score) if b.composite_score else None,
                     'total_return': float(b.total_return) if b.total_return else None,
                     'created_at': b.created_at.isoformat()
@@ -409,22 +433,35 @@ def get_public_backtest(request, backtest_id):
         backtest = BacktestRun.objects.get(id=backtest_id)
 
         # Only show completed backtests publicly
-        if backtest.status != 'completed':
+        if backtest.status != 'completed' or not backtest.is_public:
             return JsonResponse({
                 'success': False,
                 'error': 'Backtest not available for public viewing'
             }, status=404)
+
+        # Track views
+        try:
+            backtest.public_view_count = (backtest.public_view_count or 0) + 1
+            backtest.save(update_fields=['public_view_count'])
+        except Exception:
+            pass
 
         return JsonResponse({
             'success': True,
             'backtest': {
                 'id': backtest.id,
                 'name': backtest.name,
+                'strategy_text': backtest.strategy_text,
                 'category': backtest.category,
                 'symbols': backtest.symbols,
                 'start_date': str(backtest.start_date),
                 'end_date': str(backtest.end_date),
                 'initial_capital': float(backtest.initial_capital),
+                'share_slug': backtest.share_slug,
+                'public_view_count': backtest.public_view_count,
+                'creator': {
+                    'username': getattr(backtest.user, 'username', None),
+                },
                 'results': {
                     'total_return': float(backtest.total_return) if backtest.total_return else None,
                     'annualized_return': float(backtest.annualized_return) if backtest.annualized_return else None,
@@ -469,3 +506,114 @@ def get_quality_grade(score):
         return "D"
     else:
         return "F"
+
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def create_backtest_share_link(request, backtest_id):
+    """
+    Create (or return existing) public share link for a backtest.
+    Sets is_public=True and assigns share_slug if missing.
+    """
+    try:
+        backtest = BacktestRun.objects.get(id=backtest_id, user=request.user)
+        if backtest.status != "completed":
+            return JsonResponse({
+                "success": False,
+                "error": "Only completed backtests can be shared"
+            }, status=400)
+
+        if not backtest.share_slug:
+            backtest.share_slug = _generate_unique_backtest_share_slug(backtest)
+
+        backtest.is_public = True
+        if not backtest.shared_at:
+            backtest.shared_at = timezone.now()
+        backtest.save(update_fields=["share_slug", "is_public", "shared_at"])
+
+        return JsonResponse({
+            "success": True,
+            "slug": backtest.share_slug,
+            "share_url": f"/backtest/{backtest.share_slug}",
+        })
+    except BacktestRun.DoesNotExist:
+        return JsonResponse({
+            "success": False,
+            "error": "Backtest not found"
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def revoke_backtest_share_link(request, backtest_id):
+    """Make a backtest private again (keeps slug for future reuse)."""
+    try:
+        backtest = BacktestRun.objects.get(id=backtest_id, user=request.user)
+        backtest.is_public = False
+        backtest.save(update_fields=["is_public"])
+        return JsonResponse({"success": True})
+    except BacktestRun.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Backtest not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_shared_backtest(request, slug):
+    """
+    Get a shared backtest by share slug (public, no auth).
+    This is the endpoint used by `/backtest/:shareSlug`.
+    """
+    try:
+        backtest = BacktestRun.objects.get(share_slug=slug, is_public=True, status="completed")
+
+        # Track views
+        try:
+            backtest.public_view_count = (backtest.public_view_count or 0) + 1
+            backtest.save(update_fields=["public_view_count"])
+        except Exception:
+            pass
+
+        return JsonResponse({
+            "success": True,
+            "backtest": {
+                "id": backtest.id,
+                "name": backtest.name,
+                "strategy_text": backtest.strategy_text,
+                "category": backtest.category,
+                "symbols": backtest.symbols,
+                "start_date": str(backtest.start_date),
+                "end_date": str(backtest.end_date),
+                "initial_capital": float(backtest.initial_capital),
+                "share_slug": backtest.share_slug,
+                "public_view_count": backtest.public_view_count,
+                "creator": {
+                    "username": getattr(backtest.user, "username", None),
+                },
+                "results": {
+                    "total_return": float(backtest.total_return) if backtest.total_return else None,
+                    "annualized_return": float(backtest.annualized_return) if backtest.annualized_return else None,
+                    "sharpe_ratio": float(backtest.sharpe_ratio) if backtest.sharpe_ratio else None,
+                    "max_drawdown": float(backtest.max_drawdown) if backtest.max_drawdown else None,
+                    "win_rate": float(backtest.win_rate) if backtest.win_rate else None,
+                    "profit_factor": float(backtest.profit_factor) if backtest.profit_factor else None,
+                    "total_trades": backtest.total_trades,
+                    "composite_score": float(backtest.composite_score) if backtest.composite_score else None,
+                    "quality_grade": get_quality_grade(backtest.composite_score),
+                },
+                "equity_curve": backtest.equity_curve,
+                "created_at": backtest.created_at.isoformat(),
+            }
+        })
+    except BacktestRun.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Backtest not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)

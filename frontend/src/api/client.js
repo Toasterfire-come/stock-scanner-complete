@@ -1367,6 +1367,11 @@ export async function getSharedBacktest(slug) {
   return data;
 }
 
+export async function revokeSharedBacktest(backtestId) {
+  const { data } = await api.post(`/share/backtests/${backtestId}/revoke`);
+  return data;
+}
+
 export async function getPublicProfile(username) {
   const { data } = await api.get(`/user/public/${encodeURIComponent(username)}/`);
   return data;

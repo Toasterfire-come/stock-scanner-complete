@@ -278,12 +278,14 @@ function App() {
                   <Route path="/widgets" element={<Widgets />} />
                   <Route path="/badges" element={<Badges />} />
                   <Route path="/partners" element={<Partners />} />
+                  <Route path="/strategies/leaderboard" element={<StrategyLeaderboard />} />
                   
                   {/* Public Share Pages */}
                   <Route path="/w/:slug" element={<SharedWatchlist />} />
                   <Route path="/p/:slug" element={<SharedPortfolio />} />
                   <Route path="/u/:username" element={<PublicProfile />} />
                   <Route path="/share/backtest/:backtest_id" element={<PublicBacktestShare />} />
+                  <Route path="/backtest/:shareSlug" element={<PublicBacktestShare />} />
 
                   {/* Marketing Pages - Using placeholders */}
                   <Route path="/product" element={<PlaceholderPage title="Product" />} />
