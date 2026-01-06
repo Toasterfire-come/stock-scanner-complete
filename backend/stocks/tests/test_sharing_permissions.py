@@ -173,3 +173,26 @@ class SharingPermissionsTests(APITestCase):
         self.assertEqual(dl.status_code, 200)
         self.assertIn("text/csv", dl["Content-Type"])
 
+    def test_favorites_crud(self):
+        u1 = self._mk_user("favuser")
+        self.client.force_authenticate(user=u1)
+
+        empty = self.client.get("/api/favorites/")
+        self.assertEqual(empty.status_code, 200)
+        self.assertTrue(empty.json().get("success"))
+        self.assertEqual(empty.json().get("favorites"), [])
+
+        add = self.client.post("/api/favorites/", {"ticker": "aapl"}, format="json")
+        self.assertEqual(add.status_code, 200)
+        self.assertIn("AAPL", add.json().get("favorites", []))
+
+        rm = self.client.delete("/api/favorites/AAPL/")
+        self.assertEqual(rm.status_code, 200)
+        self.assertEqual(rm.json().get("favorites"), [])
+
+        add2 = self.client.post("/api/favorites/", {"ticker": "msft"}, format="json")
+        self.assertEqual(add2.status_code, 200)
+        clear = self.client.delete("/api/favorites/all/")
+        self.assertEqual(clear.status_code, 200)
+        self.assertEqual(clear.json().get("favorites"), [])
+

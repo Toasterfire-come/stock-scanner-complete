@@ -929,6 +929,23 @@ class NotificationHistory(models.Model):
         return f"{self.title} - {self.user.username}"
 
 
+class FavoriteTicker(models.Model):
+    """User favorite tickers (used for cross-device sync)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_tickers")
+    ticker = models.CharField(max_length=16, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "ticker")
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["user", "ticker"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} ❤️ {self.ticker}"
+
+
 # Partner referral analytics
 class ReferralClickEvent(models.Model):
     """Tracks referral clicks for partner codes (e.g., ADAM50)."""

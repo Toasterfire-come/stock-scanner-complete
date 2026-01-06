@@ -53,7 +53,7 @@ const Glossary = () => {
 
   const fetchTerms = async () => {
     try {
-      const response = await api.get('/api/education/glossary/');
+      const response = await api.get('/education/glossary/');
       setTerms(response.data || []);
       setLoading(false);
     } catch (error) {
@@ -65,11 +65,11 @@ const Glossary = () => {
 
   const fetchTermDetail = async (slug) => {
     try {
-      const response = await api.get(`/api/education/glossary/${slug}/`);
+      const response = await api.get(`/education/glossary/${slug}/`);
       setSelectedTerm(response.data);
       
       // Track view
-      await api.post(`/api/education/glossary/${slug}/track-view/`);
+      await api.post(`/education/glossary/${slug}/track-view/`);
     } catch (error) {
       logger.error('Error fetching term detail:', error);
     }

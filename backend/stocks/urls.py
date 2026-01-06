@@ -74,6 +74,7 @@ from . import ai_chat_api
 from . import enhanced_screener_api
 from . import trade_journal_api
 from . import exports_manager_api
+from . import favorites_api
 from . import fast_chart_api
 from . import valuation_display_api
 from . import grouping_api
@@ -386,6 +387,11 @@ urlpatterns = [
     path('exports/schedules/', exports_manager_api.schedules_list_create, name='export_schedules_list_create'),
     path('exports/schedules/<int:schedule_id>/', exports_manager_api.schedules_detail, name='export_schedules_detail'),
     path('exports/schedules/<int:schedule_id>/run-now/', exports_manager_api.schedules_run_now, name='export_schedules_run_now'),
+
+    # Favorites (cross-device sync)
+    path('favorites/', favorites_api.favorites_list_create, name='favorites_list_create'),
+    path('favorites/all/', favorites_api.favorites_clear, name='favorites_clear'),
+    path('favorites/<str:ticker>/', favorites_api.favorites_remove, name='favorites_remove'),
     path('education/walkthroughs/<int:walkthrough_id>/update/', education_api.update_walkthrough_step, name='update_walkthrough_step'),
     path('education/walkthroughs/<int:walkthrough_id>/dismiss/', education_api.dismiss_walkthrough, name='dismiss_walkthrough'),
     path('education/kb/search/', education_api.search_knowledge_base, name='search_knowledge_base'),
