@@ -3846,6 +3846,103 @@ class TradeJournalEntry(models.Model):
         return f"{self.user.email} {self.symbol} {self.type} ({self.status})"
 
 
+class UserExportJob(models.Model):
+    """
+    Lightweight export job record for export manager / download history.
+
+    Stores small CSV content directly for now (sufficient for MVP).
+    """
+    STATUS_CHOICES = [
+        ("completed", "Completed"),
+        ("processing", "Processing"),
+        ("failed", "Failed"),
+    ]
+    TYPE_CHOICES = [
+        ("stocks", "Stocks"),
+        ("portfolio", "Portfolio"),
+        ("watchlist", "Watchlist"),
+        ("custom_report", "Custom Report"),
+    ]
+    FORMAT_CHOICES = [
+        ("csv", "CSV"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="export_jobs")
+    name = models.CharField(max_length=200)
+    type = models.CharField(max_length=32, choices=TYPE_CHOICES)
+    format = models.CharField(max_length=16, choices=FORMAT_CHOICES, default="csv")
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="processing")
+    error = models.TextField(blank=True)
+
+    payload = models.JSONField(default=dict, blank=True)
+
+    # Small outputs stored in DB for MVP; can be replaced with S3 later.
+    content_type = models.CharField(max_length=100, default="text/csv")
+    filename = models.CharField(max_length=255, blank=True)
+    content_text = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    download_count = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["user", "type"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} export {self.type} ({self.status})"
+
+
+class UserExportSchedule(models.Model):
+    """
+    Persisted schedule configuration (manual run only for MVP).
+    """
+    FREQ_CHOICES = [
+        ("daily", "Daily"),
+        ("weekly", "Weekly"),
+        ("monthly", "Monthly"),
+    ]
+    FORMAT_CHOICES = [
+        ("csv", "CSV"),
+    ]
+    TYPE_CHOICES = UserExportJob.TYPE_CHOICES
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="export_schedules")
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    export_type = models.CharField(max_length=32, choices=TYPE_CHOICES, default="portfolio")
+    format = models.CharField(max_length=16, choices=FORMAT_CHOICES, default="csv")
+    frequency = models.CharField(max_length=16, choices=FREQ_CHOICES, default="weekly")
+    time = models.CharField(max_length=10, default="09:00")  # HH:MM
+    timezone = models.CharField(max_length=64, default="UTC")
+    enabled = models.BooleanField(default=True)
+    retention_days = models.IntegerField(default=30)
+
+    sms_notifications = models.BooleanField(default=False)
+    sms_recipients = models.CharField(max_length=200, blank=True)
+
+    last_run_at = models.DateTimeField(null=True, blank=True)
+    next_run_at = models.DateTimeField(null=True, blank=True)
+    run_count = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["user", "enabled"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} schedule {self.name}"
+
+
 class PerformanceReview(models.Model):
     """
     Monthly automated performance reviews.

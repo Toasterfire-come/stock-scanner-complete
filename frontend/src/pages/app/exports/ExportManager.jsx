@@ -27,6 +27,7 @@ import {
   exportPortfolioCSV, 
   exportWatchlistCSV,
   downloadReport,
+  listExportHistory,
   getCurrentApiUsage,
   getPlanLimits
 } from '../../../api/client';
@@ -46,43 +47,27 @@ const ExportManager = () => {
   }, []);
 
   const loadExportHistory = async () => {
-    // Mock export history - in real app this would come from API
-    const mockExports = [
-      {
-        id: 1,
-        type: 'stocks',
-        name: 'All Stocks Data',
-        format: 'CSV',
-        size: '2.4 MB',
-        records: 8450,
-        status: 'completed',
-        created: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        downloadUrl: '#'
-      },
-      {
-        id: 2,
-        type: 'portfolio',
-        name: 'Portfolio Holdings',
-        format: 'CSV',
-        size: '156 KB',
-        records: 12,
-        status: 'completed',
-        created: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-        downloadUrl: '#'
-      },
-      {
-        id: 3,
-        type: 'custom_report',
-        name: 'Q4 Performance Report',
-        format: 'PDF',
-        size: '1.8 MB',
-        records: null,
-        status: 'processing',
-        created: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-        downloadUrl: null
+    try {
+      const res = await listExportHistory();
+      if (res?.success) {
+        const items = (res.data || []).map((j) => ({
+          id: j.id,
+          type: j.type,
+          name: j.name,
+          format: String(j.format || 'csv').toUpperCase(),
+          size: j.size || null,
+          records: j.records || null,
+          status: j.status,
+          created: j.created_at || j.created,
+          downloadUrl: j.status === 'completed' ? `/api/reports/${j.id}/download` : null
+        }));
+        setExports(items);
+        return;
       }
-    ];
-    setExports(mockExports);
+    } catch (error) {
+      logger.error('Failed to load export history:', error);
+    }
+    setExports([]);
   };
 
   const loadUsageInfo = async () => {
@@ -139,11 +124,12 @@ const ExportManager = () => {
     if (exportItem.status !== 'completed') return;
     
     try {
+      // If it's a backend-generated report job, download via report endpoint.
       if (exportItem.type === 'custom_report') {
         const blob = await downloadReport(exportItem.id);
         downloadBlob(blob, `${exportItem.name}.${exportItem.format.toLowerCase()}`);
       } else {
-        // Handle other export types
+        // Quick exports are generated on-demand
         await handleQuickExport(exportItem.type);
       }
       toast.success('Download started');

@@ -13,6 +13,7 @@ from .models import (
     TradingJournal, PerformanceReview, UserCustomIndicator,
     TradeExport, AlertTemplate, TriggeredAlert,
     TradeJournalEntry,
+    UserExportJob, UserExportSchedule,
 )
 
 User = get_user_model()
@@ -171,6 +172,34 @@ class TradeJournalEntrySerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user', 'user_email', 'created_at', 'updated_at']
+
+
+class UserExportJobSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = UserExportJob
+        fields = [
+            "id", "user", "user_email", "name", "type", "format", "status",
+            "error", "payload", "content_type", "filename",
+            "created_at", "completed_at", "download_count",
+        ]
+        read_only_fields = ["id", "user", "user_email", "created_at", "completed_at", "download_count", "content_type", "filename"]
+
+
+class UserExportScheduleSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = UserExportSchedule
+        fields = [
+            "id", "user", "user_email",
+            "name", "description", "export_type", "format", "frequency", "time", "timezone",
+            "enabled", "retention_days", "sms_notifications", "sms_recipients",
+            "last_run_at", "next_run_at", "run_count",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "user", "user_email", "last_run_at", "next_run_at", "run_count", "created_at", "updated_at"]
 
 
 class PerformanceReviewSerializer(serializers.ModelSerializer):

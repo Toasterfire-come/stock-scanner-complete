@@ -1319,7 +1319,7 @@ export async function listJournalEntries(params = {}) {
 }
 
 export async function createJournalEntry(entryData) {
-  const { data } = await api.post('/journal/create/', entryData);
+  const { data } = await api.post('/journal/', entryData);
   return data;
 }
 
@@ -1340,6 +1340,39 @@ export async function deleteJournalEntry(entryId) {
 
 export async function getJournalStats(params = {}) {
   const { data } = await api.get('/journal/stats/', { params });
+  return data;
+}
+
+// ====================
+// EXPORT MANAGER (history + schedules)
+// ====================
+export async function listExportHistory() {
+  const { data } = await api.get('/exports/history/');
+  return data;
+}
+
+export async function listExportSchedules() {
+  const { data } = await api.get('/exports/schedules/');
+  return data;
+}
+
+export async function createExportSchedule(payload) {
+  const { data } = await api.post('/exports/schedules/', payload);
+  return data;
+}
+
+export async function updateExportSchedule(id, payload) {
+  const { data } = await api.put(`/exports/schedules/${encodeURIComponent(id)}/`, payload);
+  return data;
+}
+
+export async function deleteExportSchedule(id) {
+  const { data } = await api.delete(`/exports/schedules/${encodeURIComponent(id)}/`);
+  return data;
+}
+
+export async function runExportScheduleNow(id) {
+  const { data } = await api.post(`/exports/schedules/${encodeURIComponent(id)}/run-now/`);
   return data;
 }
 

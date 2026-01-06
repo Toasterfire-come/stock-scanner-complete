@@ -26,6 +26,7 @@ import {
 import { useAuth } from '../../../context/SecureAuthContext';
 import { toast } from 'sonner';
 import logger from '../../../lib/logger';
+import { createExportSchedule, deleteExportSchedule, listExportSchedules, runExportScheduleNow, updateExportSchedule } from '../../../api/client';
 
 const ScheduledExports = () => {
   const { user } = useAuth();
@@ -52,46 +53,34 @@ const ScheduledExports = () => {
   }, []);
 
   const loadScheduledExports = async () => {
-    // Mock scheduled exports data
-    const mockSchedules = [
-      {
-        id: 1,
-        name: 'Weekly Portfolio Report',
-        description: 'Comprehensive portfolio performance report sent every Monday',
-        export_type: 'portfolio',
-        format: 'pdf',
-        frequency: 'weekly',
-        time: '09:00',
-        timezone: 'UTC',
-        enabled: true,
-        sms_notifications: true,
-        sms_recipients: '+1234567890',
-        retention_days: 30,
-        last_run: '2024-01-15T09:00:00Z',
-        next_run: '2024-01-22T09:00:00Z',
-        status: 'active',
-        run_count: 12
-      },
-      {
-        id: 2,
-        name: 'Monthly Stock Analysis',
-        description: 'Detailed stock analysis for all holdings',
-        export_type: 'stocks',
-        format: 'xlsx',
-        frequency: 'monthly',
-        time: '08:00',
-        timezone: 'UTC',
-        enabled: false,
-        sms_notifications: false,
-        sms_recipients: '',
-        retention_days: 60,
-        last_run: '2024-01-01T08:00:00Z',
-        next_run: null,
-        status: 'paused',
-        run_count: 3
+    try {
+      const res = await listExportSchedules();
+      if (res?.success) {
+        const items = (res.data || []).map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          export_type: s.export_type,
+          format: String(s.format || 'csv'),
+          frequency: s.frequency,
+          time: s.time,
+          timezone: s.timezone,
+          enabled: !!s.enabled,
+          sms_notifications: !!s.sms_notifications,
+          sms_recipients: s.sms_recipients || '',
+          retention_days: Number(s.retention_days || 30),
+          last_run: s.last_run_at || null,
+          next_run: s.next_run_at || null,
+          status: s.enabled ? 'active' : 'paused',
+          run_count: Number(s.run_count || 0),
+        }));
+        setSchedules(items);
+        return;
       }
-    ];
-    setSchedules(mockSchedules);
+    } catch (error) {
+      logger.error('Failed to load scheduled exports:', error);
+    }
+    setSchedules([]);
   };
 
   const handleCreateSchedule = async () => {
@@ -102,17 +91,13 @@ const ScheduledExports = () => {
 
     setLoading(true);
     try {
-      // Mock API call - in real app this would call the backend
-      const schedule = {
+      const payload = {
         ...newSchedule,
-        id: Date.now(),
-        status: 'active',
-        run_count: 0,
-        last_run: null,
-        next_run: calculateNextRun(newSchedule.frequency, newSchedule.time)
+        format: 'csv', // backend currently supports CSV only
       };
-
-      setSchedules(prev => [...prev, schedule]);
+      const res = await createExportSchedule(payload);
+      if (!res?.success) throw new Error(res?.error || 'Failed to create schedule');
+      await loadScheduledExports();
       setShowCreateDialog(false);
       setNewSchedule({
         name: '',
@@ -137,36 +122,41 @@ const ScheduledExports = () => {
   };
 
   const toggleSchedule = async (id) => {
-    setSchedules(prev => prev.map(schedule => 
-      schedule.id === id 
-        ? { 
-            ...schedule, 
-            enabled: !schedule.enabled,
-            status: !schedule.enabled ? 'active' : 'paused',
-            next_run: !schedule.enabled ? calculateNextRun(schedule.frequency, schedule.time) : null
-          }
-        : schedule
-    ));
-    toast.success('Schedule updated');
+    try {
+      const schedule = schedules.find((s) => s.id === id);
+      if (!schedule) return;
+      const res = await updateExportSchedule(id, { enabled: !schedule.enabled });
+      if (!res?.success) throw new Error(res?.error || 'Failed to update schedule');
+      await loadScheduledExports();
+      toast.success('Schedule updated');
+    } catch (error) {
+      logger.error('Failed to update schedule:', error);
+      toast.error('Failed to update schedule');
+    }
   };
 
   const deleteSchedule = async (id) => {
-    setSchedules(prev => prev.filter(schedule => schedule.id !== id));
-    toast.success('Scheduled export deleted');
+    try {
+      const res = await deleteExportSchedule(id);
+      if (!res?.success) throw new Error(res?.error || 'Failed to delete schedule');
+      await loadScheduledExports();
+      toast.success('Scheduled export deleted');
+    } catch (error) {
+      logger.error('Failed to delete schedule:', error);
+      toast.error('Failed to delete schedule');
+    }
   };
 
   const runNow = async (schedule) => {
-    toast.success(`Running ${schedule.name}... Check your export history for results.`);
-    // Update last run time
-    setSchedules(prev => prev.map(s => 
-      s.id === schedule.id 
-        ? { 
-            ...s, 
-            last_run: new Date().toISOString(),
-            run_count: s.run_count + 1
-          }
-        : s
-    ));
+    try {
+      const res = await runExportScheduleNow(schedule.id);
+      if (!res?.success) throw new Error(res?.error || 'Failed to run schedule');
+      toast.success(`Ran ${schedule.name}. Check Export History for the generated file.`);
+      await loadScheduledExports();
+    } catch (error) {
+      logger.error('Failed to run schedule:', error);
+      toast.error('Failed to run schedule');
+    }
   };
 
   const calculateNextRun = (frequency, time) => {

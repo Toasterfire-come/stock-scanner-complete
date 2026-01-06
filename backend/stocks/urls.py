@@ -73,6 +73,7 @@ from . import challenges_api
 from . import ai_chat_api
 from . import enhanced_screener_api
 from . import trade_journal_api
+from . import exports_manager_api
 from . import fast_chart_api
 from . import valuation_display_api
 from . import grouping_api
@@ -197,7 +198,9 @@ urlpatterns = [
     path('export/portfolio/csv', export_portfolio_csv_view, name='export_portfolio_csv'),
     path('export/watchlist/csv', export_watchlist_csv_view, name='export_watchlist_csv'),
     # Reports download stub
-    path('reports/<str:report_id>/download', reports_download_view, name='reports_download'),
+    # Custom reports + downloads (backed by Export Manager)
+    path('reports/custom/', exports_manager_api.create_custom_report, name='reports_custom'),
+    path('reports/<uuid:report_id>/download', exports_manager_api.download_report, name='reports_download'),
 
     # Shareable Watchlists & Portfolios
     path('share/watchlists/<str:slug>/', share_watchlist_public_view, name='share_watchlist_public'),
@@ -377,6 +380,12 @@ urlpatterns = [
     # Trade Journal (trade log) endpoints used by the frontend Trading Journal page
     path('journal/', trade_journal_api.journal_list_create, name='trade_journal_list_create'),
     path('journal/<uuid:entry_id>/', trade_journal_api.journal_detail, name='trade_journal_detail'),
+
+    # Export Manager (history + schedules)
+    path('exports/history/', exports_manager_api.export_history, name='export_history'),
+    path('exports/schedules/', exports_manager_api.schedules_list_create, name='export_schedules_list_create'),
+    path('exports/schedules/<int:schedule_id>/', exports_manager_api.schedules_detail, name='export_schedules_detail'),
+    path('exports/schedules/<int:schedule_id>/run-now/', exports_manager_api.schedules_run_now, name='export_schedules_run_now'),
     path('education/walkthroughs/<int:walkthrough_id>/update/', education_api.update_walkthrough_step, name='update_walkthrough_step'),
     path('education/walkthroughs/<int:walkthrough_id>/dismiss/', education_api.dismiss_walkthrough, name='dismiss_walkthrough'),
     path('education/kb/search/', education_api.search_knowledge_base, name='search_knowledge_base'),

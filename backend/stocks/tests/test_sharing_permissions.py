@@ -153,3 +153,23 @@ class SharingPermissionsTests(APITestCase):
         self.assertEqual(delete.status_code, 200)
         self.assertTrue(delete.json().get("success"))
 
+    def test_custom_report_csv_generate_and_download(self):
+        u1 = self._mk_user("reportuser")
+        self.client.force_authenticate(user=u1)
+
+        create = self.client.post("/api/reports/custom/", {
+            "name": "My Report",
+            "type": "portfolio_summary",
+            "format": "csv",
+            "data_sources": ["portfolio"],
+        }, format="json")
+        self.assertEqual(create.status_code, 200)
+        body = create.json()
+        self.assertTrue(body.get("success"))
+        report_id = body.get("report_id")
+        self.assertTrue(report_id)
+
+        dl = self.client.get(f"/api/reports/{report_id}/download")
+        self.assertEqual(dl.status_code, 200)
+        self.assertIn("text/csv", dl["Content-Type"])
+

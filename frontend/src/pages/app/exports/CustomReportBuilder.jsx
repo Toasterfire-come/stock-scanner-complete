@@ -35,7 +35,7 @@ const CustomReportBuilder = () => {
     name: '',
     description: '',
     type: 'portfolio_summary',
-    format: 'pdf',
+    format: 'csv',
     data_sources: [],
     filters: [],
     columns: [],
@@ -219,12 +219,28 @@ const CustomReportBuilder = () => {
 
     setLoading(true);
     try {
+      if (String(reportConfig.format).toLowerCase() !== 'csv') {
+        toast.error('Only CSV reports are supported right now.');
+        setLoading(false);
+        return;
+      }
       const response = await generateCustomReport(reportConfig);
       if (response.success) {
-        toast.success('Report generated successfully! Check your download history.');
-        // Optionally redirect to export manager or download history
+        try {
+          const reportId = response.report_id || response.reportId || response.id;
+          if (reportId) {
+            const blob = await downloadReport(reportId);
+            const filename = `${reportConfig.name || 'report'}.csv`;
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+          }
+        } catch {}
+        toast.success('Report generated. Download started.');
       } else {
-        toast.error('Failed to generate report');
+        toast.error(response.error || 'Failed to generate report');
       }
     } catch (error) {
       logger.error('Failed to generate report:', error);
@@ -350,9 +366,7 @@ const CustomReportBuilder = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pdf">PDF (Recommended)</SelectItem>
                             <SelectItem value="csv">CSV</SelectItem>
-                            <SelectItem value="xlsx">Excel (XLSX)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
