@@ -117,3 +117,39 @@ class SharingPermissionsTests(APITestCase):
         self.assertEqual(pub2.status_code, 200)
         self.assertTrue(pub2.json().get("success"))
 
+    def test_trade_journal_crud(self):
+        u1 = self._mk_user("journaluser")
+        self.client.force_authenticate(user=u1)
+
+        create = self.client.post("/api/journal/", {
+            "date": "2026-01-06T00:00:00Z",
+            "symbol": "AAPL",
+            "type": "long",
+            "entry_price": 100,
+            "exit_price": 110,
+            "shares": 1,
+            "status": "win",
+            "notes": "test",
+            "tags": ["tag1"],
+        }, format="json")
+        self.assertEqual(create.status_code, 201, msg=str(getattr(create, "content", b"")[:2000]))
+        body = create.json()
+        self.assertTrue(body.get("success"))
+        entry_id = body.get("data", {}).get("id")
+        self.assertTrue(entry_id)
+
+        lst = self.client.get("/api/journal/")
+        self.assertEqual(lst.status_code, 200)
+        self.assertTrue(lst.json().get("success"))
+        ids = [e.get("id") for e in lst.json().get("data", [])]
+        self.assertIn(entry_id, ids)
+
+        upd = self.client.put(f"/api/journal/{entry_id}/", {"status": "breakeven"}, format="json")
+        self.assertEqual(upd.status_code, 200)
+        self.assertTrue(upd.json().get("success"))
+        self.assertEqual(upd.json().get("data", {}).get("status"), "breakeven")
+
+        delete = self.client.delete(f"/api/journal/{entry_id}/")
+        self.assertEqual(delete.status_code, 200)
+        self.assertTrue(delete.json().get("success"))
+

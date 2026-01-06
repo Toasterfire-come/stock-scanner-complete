@@ -11,7 +11,8 @@ from .models import (
     CopiedTrade, StrategyShare, ReferralReward,
     # Phase 9 - Retention & Habits
     TradingJournal, PerformanceReview, UserCustomIndicator,
-    TradeExport, AlertTemplate, TriggeredAlert
+    TradeExport, AlertTemplate, TriggeredAlert,
+    TradeJournalEntry,
 )
 
 User = get_user_model()
@@ -169,7 +170,7 @@ class TradeJournalEntrySerializer(serializers.ModelSerializer):
             'pnl', 'pnl_percent',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'user_email', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'user_email', 'created_at', 'updated_at']
 
 
 class PerformanceReviewSerializer(serializers.ModelSerializer):

@@ -40,7 +40,8 @@ def journal_detail(request, entry_id):
         entry.delete()
         return Response({"success": True})
 
-    serializer = TradeJournalEntrySerializer(entry, data=request.data, partial=(request.method == "PATCH"))
+    # Accept partial updates for both PUT and PATCH (frontend commonly sends partial bodies).
+    serializer = TradeJournalEntrySerializer(entry, data=request.data, partial=True)
     if not serializer.is_valid():
         return Response({"success": False, "error": "Invalid data", "details": serializer.errors}, status=400)
     entry = serializer.save()

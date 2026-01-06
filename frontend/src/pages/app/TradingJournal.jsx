@@ -148,15 +148,35 @@ export default function TradingJournal() {
         pnlPercent = ((exit - entry) / entry) * 100 * multiplier;
       }
 
-      const entryData = {
-        id: editingEntry?.id || Date.now().toString(),
+      const payload = {
         ...formData,
         date: formData.date.toISOString(),
         symbol: formData.symbol.toUpperCase(),
+        // Ensure numeric values are sent as numbers/null for DRF
+        entry_price: formData.entry_price === "" ? null : Number(formData.entry_price),
+        exit_price: formData.exit_price === "" ? null : Number(formData.exit_price),
+        shares: formData.shares === "" ? null : Number(formData.shares),
         pnl,
         pnl_percent: pnlPercent,
-        updated_at: new Date().toISOString(),
       };
+
+      // Prefer backend persistence; fallback to localStorage if API fails.
+      let entryData = null;
+      try {
+        if (editingEntry?.id) {
+          const resp = await api.put(`/journal/${encodeURIComponent(editingEntry.id)}/`, payload);
+          if (resp.data?.success) entryData = resp.data.data;
+        } else {
+          const resp = await api.post("/journal/", payload);
+          if (resp.data?.success) entryData = resp.data.data;
+        }
+      } catch {
+        entryData = {
+          id: editingEntry?.id || Date.now().toString(),
+          ...payload,
+          updated_at: new Date().toISOString(),
+        };
+      }
 
       let updatedEntries;
       if (editingEntry) {
@@ -178,8 +198,11 @@ export default function TradingJournal() {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!confirm("Delete this journal entry?")) return;
+    try {
+      await api.delete(`/journal/${encodeURIComponent(id)}/`).catch(() => {});
+    } catch {}
     const updatedEntries = entries.filter((e) => e.id !== id);
     setEntries(updatedEntries);
     saveToStorage(updatedEntries);
@@ -230,7 +253,7 @@ export default function TradingJournal() {
     losses: entries.filter((e) => e.status === "loss").length,
     open: entries.filter((e) => e.status === "open").length,
     totalPnl: entries.reduce((sum, e) => sum + (e.pnl || 0), 0),
-    winRate: entries.length > 0
+    winRate: entries.filter((e) => e.status !== "open").length > 0
       ? (entries.filter((e) => e.status === "win").length / entries.filter((e) => e.status !== "open").length) * 100
       : 0,
   };

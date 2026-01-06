@@ -278,7 +278,7 @@ urlpatterns = [
     # Custom Indicators CRUD
     path('indicators/', indicators_api.list_indicators, name='indicators_list'),
     path('indicators/create/', indicators_api.create_indicator, name='indicators_create'),
-    path('indicators/<str:indicator_id>/', indicators_api.get_indicator, name='indicators_get'),
+    path('indicators/<str:indicator_id>/', indicators_api.indicator_detail_api, name='indicators_detail'),
     path('indicators/<str:indicator_id>/update/', indicators_api.update_indicator, name='indicators_update'),
     path('indicators/<str:indicator_id>/delete/', indicators_api.delete_indicator, name='indicators_delete'),
 
