@@ -209,7 +209,7 @@ class RateLimitMiddleware(MiddlewareMixin):
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[0]
         else:
-            ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
+            ip = request.META.get('REMOTE_ADDR', '127.0.0.1')
         return f"ip_{ip}"
     
     def is_premium_user(self, request):

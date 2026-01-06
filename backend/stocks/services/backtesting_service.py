@@ -13,6 +13,7 @@ import yfinance as yf
 from django.conf import settings
 from ..models import BacktestRun, BaselineStrategy
 import re
+import signal
 
 
 class BacktestingService:
@@ -346,8 +347,21 @@ def exit_condition(data, index, entry_price, entry_index):
                 "data": data,
             }
 
-            # Execute the generated code to define functions
-            exec(code, namespace)
+            def _with_timeout(seconds: float, fn):
+                # Unix-only safety valve to prevent infinite execution.
+                def _handler(signum, frame):  # noqa: ARG001
+                    raise TimeoutError("Timed out")
+
+                prev = signal.signal(signal.SIGALRM, _handler)
+                signal.setitimer(signal.ITIMER_REAL, seconds)
+                try:
+                    return fn()
+                finally:
+                    signal.setitimer(signal.ITIMER_REAL, 0)
+                    signal.signal(signal.SIGALRM, prev)
+
+            # Execute the generated code to define functions (bounded time)
+            _with_timeout(0.5, lambda: exec(code, namespace))
             
             # Get entry and exit functions
             entry_condition = namespace.get('entry_condition')
@@ -366,7 +380,8 @@ def exit_condition(data, index, entry_price, entry_index):
                 if position is None:
                     # Check for entry
                     try:
-                        if entry_condition(data, i):
+                        ok = _with_timeout(0.05, lambda: bool(entry_condition(data, i)))
+                        if ok:
                             entry_price = data.iloc[i]['Close']
                             shares = cash / entry_price
                             position = {
@@ -382,7 +397,11 @@ def exit_condition(data, index, entry_price, entry_index):
                     # Check for exit
                     try:
                         current_price = data.iloc[i]['Close']
-                        if exit_condition(data, i, position['entry_price'], position['entry_index']):
+                        ok = _with_timeout(
+                            0.05,
+                            lambda: bool(exit_condition(data, i, position['entry_price'], position['entry_index'])),
+                        )
+                        if ok:
                             exit_price = current_price
                             cash = position['shares'] * exit_price
                             

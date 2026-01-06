@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Tuple
 import yfinance as yf
 from django.conf import settings
 import re
+import signal
 
 # Groq integration
 try:
@@ -593,8 +594,20 @@ def exit_condition(data, index, entry_price, entry_index):
                 "round": round,
             }
 
+            def _with_timeout(seconds: float, fn):
+                def _handler(signum, frame):  # noqa: ARG001
+                    raise TimeoutError("Timed out")
+
+                prev = signal.signal(signal.SIGALRM, _handler)
+                signal.setitimer(signal.ITIMER_REAL, seconds)
+                try:
+                    return fn()
+                finally:
+                    signal.setitimer(signal.ITIMER_REAL, 0)
+                    signal.signal(signal.SIGALRM, prev)
+
             namespace = {"__builtins__": safe_builtins, "pd": pd, "np": np, "data": data}
-            exec(code, namespace)
+            _with_timeout(0.5, lambda: exec(code, namespace))
             
             entry_condition = namespace.get('entry_condition')
             exit_condition = namespace.get('exit_condition')
@@ -610,7 +623,8 @@ def exit_condition(data, index, entry_price, entry_index):
             for i in range(len(data)):
                 if position is None:
                     try:
-                        if entry_condition(data, i):
+                        ok = _with_timeout(0.05, lambda: bool(entry_condition(data, i)))
+                        if ok:
                             entry_price = data.iloc[i]['Close']
                             shares = cash / entry_price
                             position = {
@@ -625,7 +639,11 @@ def exit_condition(data, index, entry_price, entry_index):
                 else:
                     try:
                         current_price = data.iloc[i]['Close']
-                        if exit_condition(data, i, position['entry_price'], position['entry_index']):
+                        ok = _with_timeout(
+                            0.05,
+                            lambda: bool(exit_condition(data, i, position['entry_price'], position['entry_index'])),
+                        )
+                        if ok:
                             cash = position['shares'] * current_price
                             trade_return = ((current_price - position['entry_price']) / position['entry_price']) * 100
                             

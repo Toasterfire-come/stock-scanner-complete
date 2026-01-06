@@ -57,7 +57,8 @@ elif cache_backend == "file":
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-            "LOCATION": os.environ.get("CACHE_DIR", "/tmp/django_cache"),
+            # Avoid /tmp by default (shared temp dir). Allow override via CACHE_DIR.
+            "LOCATION": os.environ.get("CACHE_DIR", str(BASE_DIR / "django_cache")),
             "TIMEOUT": int(os.environ.get("CACHE_TIMEOUT", "300")),
         }
     }

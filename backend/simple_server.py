@@ -21,8 +21,10 @@ application = get_wsgi_application()
 
 if __name__ == '__main__':
     # Start the server
-    server = simple_server.make_server('0.0.0.0', 8001, application)
-    print("Django server running on http://0.0.0.0:8001/")
+    host = os.environ.get("BIND_HOST", "127.0.0.1")
+    port = int(os.environ.get("BIND_PORT", "8001"))
+    server = simple_server.make_server(host, port, application)
+    print(f"Django server running on http://{host}:{port}/")
     print("Use Ctrl+C to quit.")
     try:
         server.serve_forever()

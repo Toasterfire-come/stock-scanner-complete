@@ -2,15 +2,15 @@
 API endpoints for AI Backtesting (Phase 4)
 """
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.utils.text import slugify
 from datetime import datetime, timedelta
 import json
 import secrets
 from .models import BacktestRun, BaselineStrategy
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from .authentication import BearerSessionAuthentication, CsrfExemptSessionAuthentication
 # Use Groq-powered service instead of static
 try:
     from .services.groq_backtesting_service import GroqBacktestingService as BacktestingService
@@ -69,8 +69,9 @@ def get_user_backtests_this_month(user):
     ).count()
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def create_backtest(request):
     """
     Create a new backtest run
@@ -85,29 +86,26 @@ def create_backtest(request):
     - initial_capital: float (optional, default 10000)
     """
     try:
-        data = json.loads(request.body)
-        
-        # Get or create anonymous user if not authenticated
-        user = request.user if request.user.is_authenticated else None
-        if not user:
-            from django.contrib.auth.models import User
-            user, _ = User.objects.get_or_create(username='anonymous')
+        data = getattr(request, "data", None) or {}
+        if data == {} and getattr(request, "body", None):
+            data = json.loads(request.body)
+
+        user = request.user
         
         # Check backtest limit for authenticated users
-        if request.user.is_authenticated:
-            limit = get_user_backtest_limit(request.user)
-            current_count = get_user_backtests_this_month(request.user)
+        limit = get_user_backtest_limit(user)
+        current_count = get_user_backtests_this_month(user)
             
-            if limit > 0 and current_count >= limit:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Monthly backtest limit reached',
-                    'error_code': 'LIMIT_REACHED',
-                    'current_count': current_count,
-                    'limit': limit,
-                    'message': f'You have used all {limit} backtests for this month. Upgrade to Plus plan for unlimited backtests.',
-                    'upgrade_url': '/pricing'
-                }, status=403)
+        if limit > 0 and current_count >= limit:
+            return JsonResponse({
+                'success': False,
+                'error': 'Monthly backtest limit reached',
+                'error_code': 'LIMIT_REACHED',
+                'current_count': current_count,
+                'limit': limit,
+                'message': f'You have used all {limit} backtests for this month. Upgrade to Plus plan for unlimited backtests.',
+                'upgrade_url': '/pricing'
+            }, status=403)
         
         # Validate required fields
         required_fields = ['name', 'strategy_text', 'category', 'symbols', 'start_date', 'end_date']
@@ -161,12 +159,13 @@ def create_backtest(request):
         }, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def run_backtest(request, backtest_id):
     """Execute a backtest"""
     try:
-        backtest = BacktestRun.objects.get(id=backtest_id)
+        backtest = BacktestRun.objects.get(id=backtest_id, user=request.user)
         
         # Check if already completed
         if backtest.status == 'completed':
@@ -251,12 +250,13 @@ def run_backtest(request, backtest_id):
         }, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def get_backtest(request, backtest_id):
     """Get backtest results"""
     try:
-        backtest = BacktestRun.objects.get(id=backtest_id)
+        backtest = BacktestRun.objects.get(id=backtest_id, user=request.user)
         
         return JsonResponse({
             'success': True,
@@ -308,14 +308,15 @@ def get_backtest(request, backtest_id):
         }, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def list_backtests(request):
     """List all backtests"""
     try:
         category = request.GET.get('category')
         
-        backtests = BacktestRun.objects.all()
+        backtests = BacktestRun.objects.filter(user=request.user)
         if category:
             backtests = backtests.filter(category=category)
         
@@ -349,8 +350,9 @@ def list_backtests(request):
         }, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def list_baseline_strategies(request):
     """List all baseline strategies"""
     try:
@@ -379,19 +381,12 @@ def list_baseline_strategies(request):
         }, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def get_backtest_limits(request):
     """Get user's backtest limits and usage"""
     try:
-        if not request.user.is_authenticated:
-            return JsonResponse({
-                'success': False,
-                'error': 'Authentication required. Subscribe to Basic or Plus plan to access backtesting.',
-                'message': 'Backtesting is only available for subscribed users. Please upgrade to access this feature.',
-                'upgrade_url': '/pricing'
-            }, status=403)
-
         limit = get_user_backtest_limit(request.user)
         used = get_user_backtests_this_month(request.user)
 
@@ -434,8 +429,8 @@ def get_backtest_limits(request):
         }, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
+@api_view(["GET"])
+@permission_classes([AllowAny])
 def get_public_backtest(request, backtest_id):
     """
     Get public backtest results for sharing
@@ -521,9 +516,9 @@ def get_quality_grade(score):
         return "F"
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["POST"])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def create_backtest_share_link(request, backtest_id):
     """
     Create (or return existing) public share link for a backtest.
@@ -562,9 +557,9 @@ def create_backtest_share_link(request, backtest_id):
         }, status=500)
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["POST"])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def revoke_backtest_share_link(request, backtest_id):
     """Make a backtest private again (keeps slug for future reuse)."""
     try:
@@ -578,8 +573,8 @@ def revoke_backtest_share_link(request, backtest_id):
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
+@api_view(["GET"])
+@permission_classes([AllowAny])
 def get_shared_backtest(request, slug):
     """
     Get a shared backtest by share slug (public, no auth).
@@ -633,9 +628,9 @@ def get_shared_backtest(request, slug):
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["POST"])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def fork_backtest(request, backtest_id):
     """
     Fork a backtest by id. If it's not owned by the user, it must be public.
@@ -676,9 +671,9 @@ def fork_backtest(request, backtest_id):
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["POST"])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def fork_shared_backtest(request, slug):
     """Fork a public shared backtest by slug."""
     try:
