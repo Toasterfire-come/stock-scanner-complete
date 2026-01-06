@@ -13,6 +13,7 @@ import yfinance as yf
 from django.conf import settings
 import re
 import signal
+from .stooq_data import StooqSourceConfig, fetch_stooq_from_combined_csv, fetch_stooq_remote_daily
 
 # Groq integration
 try:
@@ -527,6 +528,17 @@ def exit_condition(data, index, entry_price, entry_index):
         try:
             symbol = symbols[0] if isinstance(symbols, list) else symbols
             print(f"Fetching historical data for {symbol} from {start_date} to {end_date}")
+
+            provider = (os.environ.get("BACKTEST_DATA_PROVIDER") or "yfinance").strip().lower()
+            if provider == "stooq":
+                cfg = StooqSourceConfig.from_env()
+                interval = os.environ.get("BACKTEST_DATA_INTERVAL")  # optional, e.g. "60" or "5"
+                df = fetch_stooq_from_combined_csv(symbol, start_date, end_date, cfg=cfg, interval=interval)
+                if df.empty:
+                    df = fetch_stooq_remote_daily(symbol, start_date, end_date, cfg=cfg)
+                if not df.empty:
+                    print(f"Successfully fetched {len(df)} rows of data for {symbol} (stooq)")
+                return df
 
             ticker = yf.Ticker(symbol)
             df = ticker.history(start=start_date, end=end_date, auto_adjust=True, actions=False)

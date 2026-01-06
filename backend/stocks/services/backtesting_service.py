@@ -14,6 +14,7 @@ from django.conf import settings
 from ..models import BacktestRun, BaselineStrategy
 import re
 import signal
+from .stooq_data import StooqSourceConfig, fetch_stooq_from_combined_csv, fetch_stooq_remote_daily
 
 
 class BacktestingService:
@@ -296,6 +297,15 @@ def exit_condition(data, index, entry_price, entry_index):
             # For simplicity, use first symbol only
             # In production, you'd implement multi-symbol logic
             symbol = symbols[0] if isinstance(symbols, list) else symbols
+
+            provider = (os.environ.get("BACKTEST_DATA_PROVIDER") or "yfinance").strip().lower()
+            if provider == "stooq":
+                cfg = StooqSourceConfig.from_env()
+                interval = os.environ.get("BACKTEST_DATA_INTERVAL")  # optional, e.g. "60" or "5"
+                df = fetch_stooq_from_combined_csv(symbol, start_date, end_date, cfg=cfg, interval=interval)
+                if df.empty:
+                    df = fetch_stooq_remote_daily(symbol, start_date, end_date, cfg=cfg)
+                return df
             
             ticker = yf.Ticker(symbol)
             df = ticker.history(start=start_date, end=end_date)
