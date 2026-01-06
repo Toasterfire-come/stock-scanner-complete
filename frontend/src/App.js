@@ -12,123 +12,123 @@ import "./lib/quotaInterceptor"; // Global quota limit monitoring
 import ProtectedRoute from "./components/ProtectedRoute";
 import SkipToContent from "./components/SkipToContent";
 import CookieConsent from "./components/CookieConsent";
+import RouteLoadingFallback from "./components/RouteLoadingFallback";
 
 // Layouts
 import EnhancedAppLayout from "./layouts/EnhancedAppLayout.jsx";
 import AuthLayout from "./layouts/AuthLayout";
 
-// Auth Pages
-import SignIn from "./pages/auth/SignIn.jsx";
-import SignUp from "./pages/auth/SignUp.jsx";
-import PlanSelection from "./pages/auth/PlanSelection";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import VerifyEmail from "./pages/auth/VerifyEmail";
-import OAuthCallback from "./pages/auth/OAuthCallback";
-// TwoFactorAuth removed
-
-// Onboarding
-import OnboardingWizard from "./pages/onboarding/OnboardingWizard";
-
-// Public Pages
 import { Suspense, lazy } from "react";
+// Public/marketing pages (lightweight, ok to prefetch on modern browsers)
 const Home = lazy(() => import(/* webpackPrefetch: true */ "./pages/Home"));
 const Features = lazy(() => import(/* webpackPrefetch: true */ "./pages/Features"));
-const About = lazy(() => import(/* webpackPrefetch: true */ "./pages/About"));
-const Contact = lazy(() => import(/* webpackPrefetch: true */ "./pages/Contact"));
 const PricingPro = lazy(() => import(/* webpackPrefetch: true */ "./pages/PricingPro"));
-const Pricing = lazy(() => import(/* webpackPrefetch: true */ "./pages/Pricing"));
-const StockFilter = lazy(() => import(/* webpackPrefetch: true */ "./pages/StockFilter"));
-const MarketScan = lazy(() => import(/* webpackPrefetch: true */ "./pages/MarketScan"));
-const DemoScanner = lazy(() => import(/* webpackPrefetch: true */ "./pages/DemoScanner"));
-const Resources = lazy(() => import(/* webpackPrefetch: true */ "./pages/Resources"));
-const Press = lazy(() => import(/* webpackPrefetch: true */ "./pages/Press"));
-const Widgets = lazy(() => import(/* webpackPrefetch: true */ "./pages/Widgets"));
-const Badges = lazy(() => import(/* webpackPrefetch: true */ "./pages/Badges"));
-const Partners = lazy(() => import(/* webpackPrefetch: true */ "./pages/Partners"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const StockFilter = lazy(() => import("./pages/StockFilter"));
+const MarketScan = lazy(() => import("./pages/MarketScan"));
+const DemoScanner = lazy(() => import("./pages/DemoScanner"));
+const Resources = lazy(() => import("./pages/Resources"));
+const Press = lazy(() => import("./pages/Press"));
+const Widgets = lazy(() => import("./pages/Widgets"));
+const Badges = lazy(() => import("./pages/Badges"));
+const Partners = lazy(() => import("./pages/Partners"));
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
-import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
-import CheckoutFailure from "./pages/billing/CheckoutFailure";
-import Checkout from "./pages/billing/Checkout";
+const CheckoutSuccess = lazy(() => import("./pages/billing/CheckoutSuccess"));
+const CheckoutFailure = lazy(() => import("./pages/billing/CheckoutFailure"));
+const Checkout = lazy(() => import("./pages/billing/Checkout"));
 
 // PayPal Subscription Pages
-import SubscriptionSuccess from "./pages/SubscriptionSuccess";
-import SubscriptionCancel from "./pages/SubscriptionCancel";
+const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
+const SubscriptionCancel = lazy(() => import("./pages/SubscriptionCancel"));
+
+// Auth pages
+const SignIn = lazy(() => import("./pages/auth/SignIn.jsx"));
+const SignUp = lazy(() => import("./pages/auth/SignUp.jsx"));
+const PlanSelection = lazy(() => import("./pages/auth/PlanSelection"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
+const VerifyEmail = lazy(() => import("./pages/auth/VerifyEmail"));
+const OAuthCallback = lazy(() => import("./pages/auth/OAuthCallback"));
+
+// Onboarding
+const OnboardingWizard = lazy(() => import("./pages/onboarding/OnboardingWizard"));
 
 // App Pages (Protected)
-const AppDashboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/AppDashboard"));
-const Markets = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Markets"));
-const StockDetail = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StockDetail"));
-const EnhancedStockDetail = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/EnhancedStockDetail"));
-const Stocks = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Stocks"));
-const Portfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Portfolio"));
-const Watchlists = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Watchlists"));
-const Backtesting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Backtesting"));
-const ValueHunter = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/ValueHunter"));
-const IndicatorBuilder = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/IndicatorBuilder"));
-const TradingJournal = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/TradingJournal"));
-const TaxReporting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/TaxReporting"));
-const SharedWatchlist = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedWatchlist"));
-const SharedPortfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedPortfolio"));
-const PublicProfile = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/PublicProfile"));
-const PublicBacktestShare = lazy(() => import(/* webpackPrefetch: true */ "./pages/PublicBacktestShare"));
-const StrategyLeaderboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StrategyLeaderboard"));
-const EmbedBacktest = lazy(() => import(/* webpackPrefetch: true */ "./pages/EmbedBacktest"));
-const BlogIndex = lazy(() => import(/* webpackPrefetch: true */ "./pages/blog/BlogIndex"));
-const BlogPost = lazy(() => import(/* webpackPrefetch: true */ "./pages/blog/BlogPost"));
-import WatchlistDetail from "./pages/app/WatchlistDetail";
+const AppDashboard = lazy(() => import("./pages/app/AppDashboard"));
+const Markets = lazy(() => import("./pages/app/Markets"));
+const StockDetail = lazy(() => import("./pages/app/StockDetail"));
+const EnhancedStockDetail = lazy(() => import("./pages/app/EnhancedStockDetail"));
+const Stocks = lazy(() => import("./pages/app/Stocks"));
+const Portfolio = lazy(() => import("./pages/app/Portfolio"));
+const Watchlists = lazy(() => import("./pages/app/Watchlists"));
+const Backtesting = lazy(() => import("./pages/app/Backtesting"));
+const ValueHunter = lazy(() => import("./pages/app/ValueHunter"));
+const IndicatorBuilder = lazy(() => import("./pages/app/IndicatorBuilder"));
+const TradingJournal = lazy(() => import("./pages/app/TradingJournal"));
+const TaxReporting = lazy(() => import("./pages/app/TaxReporting"));
+const SharedWatchlist = lazy(() => import("./pages/app/SharedWatchlist"));
+const SharedPortfolio = lazy(() => import("./pages/app/SharedPortfolio"));
+const PublicProfile = lazy(() => import("./pages/app/PublicProfile"));
+const PublicBacktestShare = lazy(() => import("./pages/PublicBacktestShare"));
+const StrategyLeaderboard = lazy(() => import("./pages/app/StrategyLeaderboard"));
+const EmbedBacktest = lazy(() => import("./pages/EmbedBacktest"));
+const BlogIndex = lazy(() => import("./pages/blog/BlogIndex"));
+const BlogPost = lazy(() => import("./pages/blog/BlogPost"));
+const WatchlistDetail = lazy(() => import("./pages/app/WatchlistDetail"));
 
 // Education Pages (Phase 7)
-const CourseCatalog = lazy(() => import(/* webpackPrefetch: true */ "./pages/education/CourseCatalog"));
-const Glossary = lazy(() => import(/* webpackPrefetch: true */ "./pages/education/Glossary"));
-const ProgressDashboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/education/ProgressDashboard"));
+const CourseCatalog = lazy(() => import("./pages/education/CourseCatalog"));
+const Glossary = lazy(() => import("./pages/education/Glossary"));
+const ProgressDashboard = lazy(() => import("./pages/education/ProgressDashboard"));
 
 // Developer Tools (Gold Plan)
-import DeveloperDashboard from "./pages/app/developer/DeveloperDashboard";
-import ApiKeyManagement from "./pages/app/developer/ApiKeyManagement";
-import UsageStatistics from "./pages/app/developer/UsageStatistics";
-import ApiDocumentation from "./pages/app/developer/ApiDocumentation";
-import DeveloperConsole from "./pages/app/developer/DeveloperConsole";
+const DeveloperDashboard = lazy(() => import("./pages/app/developer/DeveloperDashboard"));
+const ApiKeyManagement = lazy(() => import("./pages/app/developer/ApiKeyManagement"));
+const UsageStatistics = lazy(() => import("./pages/app/developer/UsageStatistics"));
+const ApiDocumentation = lazy(() => import("./pages/app/developer/ApiDocumentation"));
+const DeveloperConsole = lazy(() => import("./pages/app/developer/DeveloperConsole"));
 
 // Screener Suite (Protected)
-import ScreenerLibrary from "./pages/app/screeners/ScreenerLibrary";
-import CreateScreener from "./pages/app/screeners/CreateScreener";
-import EditScreener from "./pages/app/screeners/EditScreener";
-import ScreenerResults from "./pages/app/screeners/ScreenerResults";
-import ScreenerDetail from "./pages/app/screeners/ScreenerDetail";
-import EnhancedCreateScreener from "./pages/app/screeners/EnhancedCreateScreener";
-import EnhancedScreenerResults from "./pages/app/screeners/EnhancedScreenerResults";
-import Templates from "./pages/app/Templates";
+const ScreenerLibrary = lazy(() => import("./pages/app/screeners/ScreenerLibrary"));
+const CreateScreener = lazy(() => import("./pages/app/screeners/CreateScreener"));
+const EditScreener = lazy(() => import("./pages/app/screeners/EditScreener"));
+const ScreenerResults = lazy(() => import("./pages/app/screeners/ScreenerResults"));
+const ScreenerDetail = lazy(() => import("./pages/app/screeners/ScreenerDetail"));
+const EnhancedCreateScreener = lazy(() => import("./pages/app/screeners/EnhancedCreateScreener"));
+const EnhancedScreenerResults = lazy(() => import("./pages/app/screeners/EnhancedScreenerResults"));
+const Templates = lazy(() => import("./pages/app/Templates"));
 
 // Market Overview (Protected)
-import MarketHeatmap from "./pages/app/MarketHeatmap";
-import SectorsIndustries from "./pages/app/SectorsIndustries";
-import TopMovers from "./pages/app/TopMovers";
-import PreAfterMarket from "./pages/app/PreAfterMarket";
-import EconomicCalendar from "./pages/app/EconomicCalendar";
+const MarketHeatmap = lazy(() => import("./pages/app/MarketHeatmap"));
+const SectorsIndustries = lazy(() => import("./pages/app/SectorsIndustries"));
+const TopMovers = lazy(() => import("./pages/app/TopMovers"));
+const PreAfterMarket = lazy(() => import("./pages/app/PreAfterMarket"));
+const EconomicCalendar = lazy(() => import("./pages/app/EconomicCalendar"));
 
 // News & Sentiment (Re-enabled for production)
-import NewsFeed from "./pages/app/NewsFeed";
-import NewsPreferences from "./pages/app/NewsPreferences";
-import NewsSubscribe from "./pages/app/NewsSubscribe";
+const NewsFeed = lazy(() => import("./pages/app/NewsFeed"));
+const NewsPreferences = lazy(() => import("./pages/app/NewsPreferences"));
+const NewsSubscribe = lazy(() => import("./pages/app/NewsSubscribe"));
 
 // Paper Trading (MVP2 v3.4 - Basic Tier)
-import PaperTrading from "./pages/app/PaperTrading";
+const PaperTrading = lazy(() => import("./pages/app/PaperTrading"));
 
 // Options Analytics (MVP2 v3.4 - Pro Tier)
-import OptionsAnalytics from "./pages/app/OptionsAnalytics";
+const OptionsAnalytics = lazy(() => import("./pages/app/OptionsAnalytics"));
 
 // Alerts & Signals (Protected)
-import Alerts from "./pages/app/Alerts";
-import AlertHistory from "./pages/app/AlertHistory";
+const Alerts = lazy(() => import("./pages/app/Alerts"));
+const AlertHistory = lazy(() => import("./pages/app/AlertHistory"));
 
 // Account Pages (Protected)
-import Profile from "./pages/account/Profile";
-import ChangePassword from "./pages/account/ChangePassword";
-import NotificationSettings from "./pages/account/NotificationSettings";
-import BillingHistory from "./pages/account/BillingHistory";
-import CurrentPlan from "./pages/account/CurrentPlan";
-import Settings from "./pages/account/Settings";
+const Profile = lazy(() => import("./pages/account/Profile"));
+const ChangePassword = lazy(() => import("./pages/account/ChangePassword"));
+const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
+const BillingHistory = lazy(() => import("./pages/account/BillingHistory"));
+const CurrentPlan = lazy(() => import("./pages/account/CurrentPlan"));
+const Settings = lazy(() => import("./pages/account/Settings"));
 
 // Partner Analytics (Protected - whitelisted emails only)
 import PartnerAnalyticsRoute from "./routes/PartnerAnalyticsRoute";
@@ -137,29 +137,29 @@ import PartnerAnalyticsRoute from "./routes/PartnerAnalyticsRoute";
 import EndpointStatus from "./pages/system/EndpointStatus";
 
 // Content & Docs
-import LegalTerms from "./pages/LegalTerms";
-import LegalPrivacy from "./pages/LegalPrivacy";
-import Documentation from "./pages/docs/Documentation";
-import CreateAccount from "./pages/docs/getting-started/CreateAccount";
-import Dashboard from "./pages/docs/getting-started/Dashboard";
-import FirstScreener from "./pages/docs/getting-started/FirstScreener";
-import DocsCategory from "./pages/docs/DocsCategory";
-import DocArticle from "./pages/docs/DocArticle";
-import EnterpriseContact from "./pages/enterprise/EnterpriseContact";
-import Help from "./pages/Help";
+const LegalTerms = lazy(() => import("./pages/LegalTerms"));
+const LegalPrivacy = lazy(() => import("./pages/LegalPrivacy"));
+const Documentation = lazy(() => import("./pages/docs/Documentation"));
+const CreateAccount = lazy(() => import("./pages/docs/getting-started/CreateAccount"));
+const Dashboard = lazy(() => import("./pages/docs/getting-started/Dashboard"));
+const FirstScreener = lazy(() => import("./pages/docs/getting-started/FirstScreener"));
+const DocsCategory = lazy(() => import("./pages/docs/DocsCategory"));
+const DocArticle = lazy(() => import("./pages/docs/DocArticle"));
+const EnterpriseContact = lazy(() => import("./pages/enterprise/EnterpriseContact"));
+const Help = lazy(() => import("./pages/Help"));
 import ReferralApply from "./pages/ReferralApply";
-import AdminConsole from "./pages/admin/AdminConsole";
+const AdminConsole = lazy(() => import("./pages/admin/AdminConsole"));
 
 // Enterprise Solutions
-import QuoteRequest from "./pages/enterprise/QuoteRequest";
-import SolutionsShowcase from "./pages/enterprise/SolutionsShowcase";
-import WhiteLabelConfig from "./pages/enterprise/WhiteLabelConfig";
+const QuoteRequest = lazy(() => import("./pages/enterprise/QuoteRequest"));
+const SolutionsShowcase = lazy(() => import("./pages/enterprise/SolutionsShowcase"));
+const WhiteLabelConfig = lazy(() => import("./pages/enterprise/WhiteLabelConfig"));
 
 // Data Export System
-import ExportManager from "./pages/app/exports/ExportManager";
-import CustomReportBuilder from "./pages/app/exports/CustomReportBuilder";
-import ScheduledExports from "./pages/app/exports/ScheduledExports";
-import DownloadHistory from "./pages/app/exports/DownloadHistory";
+const ExportManager = lazy(() => import("./pages/app/exports/ExportManager"));
+const CustomReportBuilder = lazy(() => import("./pages/app/exports/CustomReportBuilder"));
+const ScheduledExports = lazy(() => import("./pages/app/exports/ScheduledExports"));
+const DownloadHistory = lazy(() => import("./pages/app/exports/DownloadHistory"));
 
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
@@ -230,7 +230,7 @@ function App() {
           <SystemErrorBoundary>
             <div id="main-content" className="min-h-screen bg-background" tabIndex="-1">
               <OfflineBanner />
-              <Suspense fallback={<div className="p-8 text-center">Loading…</div>}>
+              <Suspense fallback={<RouteLoadingFallback />}>
               <PageViewTracker />
               <Routes>
                 {/* Auth Routes */}
