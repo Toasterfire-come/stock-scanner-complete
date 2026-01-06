@@ -12,7 +12,8 @@ async function dismissCookieConsentIfPresent(page) {
   }
 }
 
-test('mobile marketing home loads and primary CTA visible', async ({ page }) => {
+test('mobile marketing home loads and primary CTA visible', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Desktop Chrome', 'Mobile-only assertion');
   await page.goto('/');
   await dismissCookieConsentIfPresent(page);
   await expect(page.getByRole('heading', { name: /Turn Market Data Into Profitable Trades/i })).toBeVisible({
@@ -21,7 +22,8 @@ test('mobile marketing home loads and primary CTA visible', async ({ page }) => 
   await expect(page.getByRole('link', { name: /Try free — no card required/i })).toBeVisible();
 });
 
-test('mobile app nav visible and routes work', async ({ page }) => {
+test('mobile app nav visible and routes work', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Desktop Chrome', 'Mobile-only bottom navigation');
   await page.goto('/');
   await dismissCookieConsentIfPresent(page);
   // Navigate to app route (unauthenticated to see layout and nav)

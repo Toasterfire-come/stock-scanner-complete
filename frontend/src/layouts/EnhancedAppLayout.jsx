@@ -154,16 +154,21 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
   const isHome = isOnPublicPage && (location.pathname === "/" || location.pathname === "/home");
   const bottomNavVisible = isUserPage;
   const showBreadcrumbs = location.pathname.startsWith("/docs");
+  const isEmbedRoute = location.pathname.startsWith("/embed/");
+  const showQuickActions = isUserPage && !isEmbedRoute;
+  const showShellChrome = !isEmbedRoute;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO {...seoForPath(location.pathname)} />
-      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} isAuthenticated={isAuthenticated} />
-      <ProductTour run={tourOpen} onRunChange={setTourOpen} autoRunEnabled={isAuthenticated} />
-      {/* Enhanced Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+      {showShellChrome && (
+        <>
+          <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} isAuthenticated={isAuthenticated} />
+          <ProductTour run={tourOpen} onRunChange={setTourOpen} autoRunEnabled={isAuthenticated} />
+          {/* Enhanced Header */}
+          <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex h-16 items-center justify-between">
             {/* Logo with enhanced hover effect */}
             <Link 
               to={isAuthenticated ? "/app/dashboard" : "/"} 
@@ -350,16 +355,18 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
                 </SheetContent>
               </Sheet>
             </div>
-          </div>
+              </div>
 
-          {/* Breadcrumbs */}
-          {showBreadcrumbs && (
-            <div className="py-3 border-t border-gray-100">
-              <SmartBreadcrumb />
+              {/* Breadcrumbs */}
+              {showBreadcrumbs && (
+                <div className="py-3 border-t border-gray-100">
+                  <SmartBreadcrumb />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </header>
+          </header>
+        </>
+      )}
 
       {/* Main content */}
       <main className="flex-1 relative">
@@ -367,9 +374,10 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
       </main>
 
       {/* Quick Actions Floating Button */}
-      <QuickActions onStartTour={() => setTourOpen(true)} />
+      {showQuickActions && <QuickActions onStartTour={() => setTourOpen(true)} />}
 
       {/* Enhanced Footer */}
+      {!isEmbedRoute && (
       <footer className="border-t bg-gray-50/80 backdrop-blur">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
@@ -430,6 +438,7 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
           </div>
         </div>
       </footer>
+      )}
 
       {/* Mobile Bottom Navigation */}
       {bottomNavVisible && (

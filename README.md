@@ -1,33 +1,19 @@
-# TradeScanPro - Stock Scanner Platform
+# Trade Scan Pro
 
-## Overview
+Stock scanning + watchlists/portfolios + AI backtesting.
 
-TradeScanPro is a professional stock scanning and analysis platform for NASDAQ stocks. It provides real-time data, technical indicators, backtesting capabilities, and customizable charts.
+## Quick start
 
-### Core Features
-- Real-time stock data scanning
-- Advanced technical indicators
-- Backtesting engine
-- Customizable Stooq HTML5 charts
-- Watchlists and favorites
-- Price alerts
-- Partner referral system
-- Subscription billing (PayPal)
+- **Install / run**: see `docs/INSTALL.md`
 
-### Technology Stack
-- **Backend**: Django 4.2, Django REST Framework
-- **Frontend**: React, Tailwind CSS
-- **Database**: PostgreSQL / MySQL
-- **Cache**: Redis (optional)
-- **Charts**: Stooq HTML5
-- **Payments**: PayPal
-- **Deployment**: Cloudflare Tunnel
+## Repo layout
 
-## Quick Links
+- **Backend**: `backend/` (Django + REST)
+- **Frontend**: `frontend/` (React + Tailwind)
 
-- **Setup Guide**: See [SETUP.md](SETUP.md)
-- **Features**: See [FEATURES.md](FEATURES.md)
-- **Contact**: carter.kiefer2010@outlook.com
+## Notes
+
+- **Backtesting executes generated code** (restricted + timeouts). For production, isolate execution in a worker/container.
 
 ## Project Structure
 
@@ -66,35 +52,6 @@ stock-scanner-complete/
 4. **Portfolio Tracker**: Track investments and performance
 5. **Education**: Learning materials for traders
 
-## Production Deployment
-
-The platform is deployed using:
-- Backend API: `api.tradescanpro.com`
-- Frontend: `tradescanpro.com`
-- Cloudflare Tunnel for secure API access
-
-## Security
-
-- API-only backend (no HTML templates)
-- HTTPS required
-- PayPal webhook signature verification
-- Rate limiting on critical endpoints
-- reCAPTCHA support
-- CSRF protection
-
-## Performance
-
-- **Real-time Scanner**: Processes stocks in batches with proxy rotation
-- **Historical Scanner**: 12-hour spread delays prevent API throttling
-- **Caching**: Redis caching for frequently accessed data
-- **Database**: Optimized queries with indexing
-
-## Support
-
-For issues or questions:
-- Email: carter.kiefer2010@outlook.com
-- GitHub: [Issues](https://github.com/anthropics/claude-code/issues)
-
 ## License
 
-Proprietary - All rights reserved
+Proprietary (see repository owner).

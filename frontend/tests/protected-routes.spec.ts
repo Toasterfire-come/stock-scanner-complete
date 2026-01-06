@@ -17,7 +17,8 @@ test('unauthenticated backtesting route shows access restricted', async ({ page 
   await dismissCookieConsentIfPresent(page);
 
   await expect(page.getByText(/Access Restricted/i)).toBeVisible({ timeout: 10000 });
-  await expect(page.getByRole('link', { name: /Sign In/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Create Free Account/i })).toBeVisible();
+  const main = page.getByRole('main');
+  await expect(main.getByRole('link', { name: /Sign In/i })).toBeVisible();
+  await expect(main.getByRole('link', { name: /Create Free Account/i })).toBeVisible();
 });
 
