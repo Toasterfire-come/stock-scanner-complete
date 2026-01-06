@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import logger from '../../../lib/logger';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
 
 const EnhancedCreateScreener = () => {
   const navigate = useNavigate();

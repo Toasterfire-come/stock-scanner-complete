@@ -72,6 +72,7 @@ from . import challenges_api
 # NEW MVP Feature APIs
 from . import ai_chat_api
 from . import enhanced_screener_api
+from . import trade_journal_api
 from . import fast_chart_api
 from . import valuation_display_api
 from . import grouping_api
@@ -372,6 +373,10 @@ urlpatterns = [
     # Weekly challenges (Phase: Viral Engagement)
     path('challenges/current/', challenges_api.get_current_challenge, name='current_challenge'),
     path('challenges/leaderboard/', challenges_api.get_challenge_leaderboard, name='challenge_leaderboard'),
+
+    # Trade Journal (trade log) endpoints used by the frontend Trading Journal page
+    path('journal/', trade_journal_api.journal_list_create, name='trade_journal_list_create'),
+    path('journal/<uuid:entry_id>/', trade_journal_api.journal_detail, name='trade_journal_detail'),
     path('education/walkthroughs/<int:walkthrough_id>/update/', education_api.update_walkthrough_step, name='update_walkthrough_step'),
     path('education/walkthroughs/<int:walkthrough_id>/dismiss/', education_api.dismiss_walkthrough, name='dismiss_walkthrough'),
     path('education/kb/search/', education_api.search_knowledge_base, name='search_knowledge_base'),

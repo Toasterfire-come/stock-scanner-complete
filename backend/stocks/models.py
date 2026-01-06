@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from decimal import Decimal
 import json
 from django.utils import timezone
+import uuid
 
 class Stock(models.Model):
     # Basic stock info
@@ -3788,6 +3789,61 @@ class TradingJournal(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.title} ({self.created_at.strftime('%Y-%m-%d')})"
+
+
+class TradeJournalEntry(models.Model):
+    """
+    Trade-log style journal entry used by the frontend Trading Journal page.
+
+    This is intentionally separate from `TradingJournal` (reflection journal) to
+    support P&L analytics and structured trade fields.
+    """
+    STATUS_CHOICES = [
+        ("open", "Open"),
+        ("win", "Win"),
+        ("loss", "Loss"),
+        ("breakeven", "Breakeven"),
+    ]
+    SIDE_CHOICES = [
+        ("long", "Long"),
+        ("short", "Short"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="trade_journal_entries")
+
+    date = models.DateTimeField(default=timezone.now, db_index=True)
+    symbol = models.CharField(max_length=16, db_index=True)
+    type = models.CharField(max_length=10, choices=SIDE_CHOICES, default="long")
+
+    entry_price = models.DecimalField(max_digits=15, decimal_places=6, null=True, blank=True)
+    exit_price = models.DecimalField(max_digits=15, decimal_places=6, null=True, blank=True)
+    shares = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+
+    strategy = models.CharField(max_length=200, blank=True)
+    setup = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+    emotions = models.TextField(blank=True)
+    lessons = models.TextField(blank=True)
+    tags = models.JSONField(default=list, blank=True)
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="open", db_index=True)
+    screenshot_url = models.URLField(blank=True)
+
+    pnl = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    pnl_percent = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-date"]),
+            models.Index(fields=["user", "symbol"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} {self.symbol} {self.type} ({self.status})"
 
 
 class PerformanceReview(models.Model):

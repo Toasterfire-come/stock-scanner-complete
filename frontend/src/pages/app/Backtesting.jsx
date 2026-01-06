@@ -599,7 +599,7 @@ Learn from my mistakes 👉 ${shareUrl}`;
   useEffect(() => {
     const load = async () => {
       try {
-        const baseUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
+        const baseUrl = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
         const res = await fetch(`${baseUrl}/api/challenges/current/`);
         const data = await res.json();
         if (data?.success) setWeeklyChallenge(data.challenge);

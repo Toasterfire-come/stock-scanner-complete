@@ -7,7 +7,7 @@ import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { toast } from "sonner";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
 
 export default function AchievementsDisplay() {
   const [achievements, setAchievements] = useState(null);

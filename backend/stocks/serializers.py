@@ -155,6 +155,23 @@ class TradingJournalSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user_email', 'created_at', 'updated_at']
 
 
+class TradeJournalEntrySerializer(serializers.ModelSerializer):
+    """Serializer for TradeJournalEntry (trade log)."""
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = TradeJournalEntry
+        fields = [
+            'id', 'user', 'user_email', 'date', 'symbol', 'type',
+            'entry_price', 'exit_price', 'shares',
+            'strategy', 'setup', 'notes', 'emotions', 'lessons',
+            'tags', 'status', 'screenshot_url',
+            'pnl', 'pnl_percent',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user_email', 'created_at', 'updated_at']
+
+
 class PerformanceReviewSerializer(serializers.ModelSerializer):
     """Serializer for PerformanceReview model."""
     user_email = serializers.EmailField(source='user.email', read_only=True)
