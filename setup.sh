@@ -12,6 +12,7 @@ echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  Stock Scanner MVP2 v3.4 Setup Script${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
+echo -e "${YELLOW}Note:${NC} For the canonical setup guide, see docs/INSTALL.md"
 
 # Function to check if command exists
 command_exists() {
@@ -32,8 +33,8 @@ if ! command_exists node; then
     MISSING_DEPS=1
 fi
 
-if ! command_exists npm; then
-    echo -e "${RED}❌ npm is required but not installed.${NC}"
+if ! command_exists yarn; then
+    echo -e "${RED}❌ yarn is required but not installed.${NC}"
     MISSING_DEPS=1
 fi
 
@@ -100,12 +101,12 @@ python manage.py createsuperuser
 echo -e "\n${YELLOW}[8/8] Setting up frontend...${NC}"
 cd ../frontend
 
-# Install npm dependencies
-npm install
+# Install yarn dependencies
+yarn install
 echo -e "${GREEN}✅ Frontend dependencies installed${NC}"
 
 # Build frontend
-npm run build
+yarn build
 echo -e "${GREEN}✅ Frontend build complete${NC}"
 
 # Final summary
@@ -127,7 +128,7 @@ echo "   python manage.py runserver"
 echo ""
 echo "3. Start the frontend (in a new terminal):"
 echo "   cd frontend"
-echo "   npm start"
+echo "   yarn start"
 echo ""
 echo "4. Or use Docker Compose:"
 echo "   docker-compose up -d"
