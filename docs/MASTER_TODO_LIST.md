@@ -317,8 +317,8 @@ The repo already contains substantial implementation work that this checklist wa
   - [ ] Add Redis caching layer
   - [ ] Optimize database indices
   - [ ] Enable CDN for static assets
-  - [ ] Implement code splitting
-  - [ ] Lazy load heavy components
+  - [x] Implement code splitting *(lazy-loaded export libs like `jspdf`, `html2canvas`, `html-to-image`)*
+  - [x] Lazy load heavy components *(moved heavy export deps off initial bundle)*
 
 ---
 

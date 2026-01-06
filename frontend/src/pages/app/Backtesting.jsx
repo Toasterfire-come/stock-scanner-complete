@@ -12,10 +12,7 @@ import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Progress } from "../../components/ui/progress";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/ui/dialog";
-import * as htmlToImage from 'html-to-image';
 import { QRCodeCanvas } from "qrcode.react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import {
   Brain,
   Play,
@@ -71,6 +68,23 @@ import SEO from "../../components/SEO";
 import logger from '../../lib/logger';
 import { trackEvent as trackAnalyticsEvent, matomoTrackEvent } from "../../lib/analytics";
 import AchievementUnlock from "../../components/AchievementUnlock";
+
+// Lazy-load heavy export deps to reduce initial bundle size.
+let __htmlToImagePromise;
+let __html2canvasPromise;
+let __jspdfPromise;
+function loadHtmlToImage() {
+  if (!__htmlToImagePromise) __htmlToImagePromise = import("html-to-image");
+  return __htmlToImagePromise;
+}
+function loadHtml2Canvas() {
+  if (!__html2canvasPromise) __html2canvasPromise = import("html2canvas");
+  return __html2canvasPromise;
+}
+function loadJsPDF() {
+  if (!__jspdfPromise) __jspdfPromise = import("jspdf");
+  return __jspdfPromise;
+}
 
 // Baseline strategy templates
 const BASELINE_STRATEGIES = {
@@ -408,6 +422,7 @@ Learn from my mistakes 👉 ${shareUrl}`;
 
     setExporting(true);
     try {
+      const htmlToImage = await loadHtmlToImage();
       // Ensure the QR code points to an actually public page
       if (currentBacktest) {
         await ensurePublicShare(currentBacktest);
@@ -456,6 +471,9 @@ Learn from my mistakes 👉 ${shareUrl}`;
 
     setPdfExporting(true);
     try {
+      const html2canvasMod = await loadHtml2Canvas();
+      const html2canvas = html2canvasMod?.default || html2canvasMod;
+      const { jsPDF } = await loadJsPDF();
       if (currentBacktest) {
         await ensurePublicShare(currentBacktest);
       }

@@ -4,7 +4,6 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Alert, AlertDescription } from "../../components/ui/alert";
-import * as htmlToImage from "html-to-image";
 import { QRCodeCanvas } from "qrcode.react";
 import { 
   TrendingUp, 
@@ -52,6 +51,13 @@ import {
 import SEO from "../../components/SEO";
 import logger from '../../lib/logger';
 import { trackEvent as trackAnalyticsEvent, matomoTrackEvent } from "../../lib/analytics";
+
+// Lazy-load heavy export deps to reduce initial bundle size.
+let __htmlToImagePromise;
+function loadHtmlToImage() {
+  if (!__htmlToImagePromise) __htmlToImagePromise = import("html-to-image");
+  return __htmlToImagePromise;
+}
 
 // Metric Card Component
 const MetricCard = ({ title, value, subtitle, icon: Icon, trend, color = "blue" }) => {
@@ -301,6 +307,7 @@ Try it 👉 ${window.location.origin}`;
     }
     setShareExporting(true);
     try {
+      const htmlToImage = await loadHtmlToImage();
       const dataUrl = await htmlToImage.toPng(shareCardRef.current, {
         quality: 0.98,
         pixelRatio: 2,

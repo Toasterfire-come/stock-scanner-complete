@@ -9,10 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Calendar } from "../../components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover";
-import * as htmlToImage from "html-to-image";
 import { QRCodeCanvas } from "qrcode.react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import {
   Plus,
   Trash2,
@@ -48,6 +45,23 @@ import { JournalAnalytics } from "../../components/JournalAnalytics";
 import { TaxReportExporter, DataExporter } from "../../components/ExportUtils";
 import logger from '../../lib/logger';
 import { trackEvent as trackAnalyticsEvent, matomoTrackEvent } from "../../lib/analytics";
+
+// Lazy-load heavy export deps to reduce initial bundle size.
+let __htmlToImagePromise;
+let __html2canvasPromise;
+let __jspdfPromise;
+function loadHtmlToImage() {
+  if (!__htmlToImagePromise) __htmlToImagePromise = import("html-to-image");
+  return __htmlToImagePromise;
+}
+function loadHtml2Canvas() {
+  if (!__html2canvasPromise) __html2canvasPromise = import("html2canvas");
+  return __html2canvasPromise;
+}
+function loadJsPDF() {
+  if (!__jspdfPromise) __jspdfPromise = import("jspdf");
+  return __jspdfPromise;
+}
 
 // Trading Journal - Phase 9 Retention Feature
 export default function TradingJournal() {
@@ -287,6 +301,7 @@ Track your trades 👉 ${window.location.origin}`;
     }
     setShareExporting(true);
     try {
+      const htmlToImage = await loadHtmlToImage();
       const dataUrl = await htmlToImage.toPng(shareCardRef.current, {
         quality: 0.98,
         pixelRatio: 2,
@@ -317,6 +332,9 @@ Track your trades 👉 ${window.location.origin}`;
     }
     setSharePdfExporting(true);
     try {
+      const html2canvasMod = await loadHtml2Canvas();
+      const html2canvas = html2canvasMod?.default || html2canvasMod;
+      const { jsPDF } = await loadJsPDF();
       const canvas = await html2canvas(shareCardRef.current, { backgroundColor: "#ffffff", scale: 2, useCORS: true });
       const imgData = canvas.toDataURL("image/png", 1.0);
       const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1200, 628], compress: true });

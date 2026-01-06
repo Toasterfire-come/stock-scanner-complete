@@ -4,6 +4,17 @@ This repo contains:
 - **Backend**: Django (REST API) in `backend/`
 - **Frontend**: React (CRA + CRACO) in `frontend/`
 
+## Quickstart (Makefile)
+
+If you have `make` installed, you can use:
+
+```bash
+make install
+make test
+```
+
+See `make help` for more targets (build, e2e, security audit).
+
 ## Option A — Docker (recommended)
 
 ### Prereqs
@@ -54,12 +65,17 @@ docker compose up --build
 ### Backend
 
 ```bash
-python3 -m pip install -r backend/requirements.txt
-export DJANGO_SETTINGS_MODULE=stockscanner_django.settings
+python3 -m venv backend/venv
+backend/venv/bin/pip install -r backend/requirements.txt
+
+# Use SQLite for local dev (recommended unless you need MySQL parity)
+export DJANGO_SETTINGS_MODULE=stockscanner_django.settings_local_sqlite
 export DJANGO_DEBUG=True
 export DJANGO_SECRET_KEY="dev-only-change-me"
-python3 backend/manage.py migrate
-python3 backend/manage.py runserver 0.0.0.0:8000
+
+cd backend
+./venv/bin/python manage.py migrate
+./venv/bin/python manage.py runserver 127.0.0.1:8000
 ```
 
 ### Frontend
@@ -90,7 +106,8 @@ yarn --cwd frontend test:e2e
 Backend tests use SQLite + auth enabled:
 
 ```bash
-DJANGO_SETTINGS_MODULE=stockscanner_django.settings_ci python3 backend/manage.py test stocks
+cd backend
+DJANGO_SETTINGS_MODULE=stockscanner_django.settings_ci ./venv/bin/python manage.py test
 ```
 
 ## Security note (important)

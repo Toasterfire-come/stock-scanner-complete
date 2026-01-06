@@ -13,6 +13,7 @@ from .settings import *  # noqa
 
 DEBUG = True
 TESTING_DISABLE_AUTH = False
+SUPPRESS_AUTH_STATUS_LOGS = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -40,4 +41,12 @@ MIDDLEWARE = [
         "stocks.rate_limit_middleware.RateLimitMiddleware",
     )
 ]
+
+# Reduce expected auth/noise logs during tests (e.g. intentional 401/403 assertions).
+try:
+    LOGGING.setdefault("loggers", {})
+    LOGGING["loggers"].setdefault("django.request", {})
+    LOGGING["loggers"]["django.request"].update({"level": "ERROR"})
+except Exception:
+    pass
 
