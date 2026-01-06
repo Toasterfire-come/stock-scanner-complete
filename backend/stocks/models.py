@@ -1048,6 +1048,7 @@ class BacktestRun(models.Model):
     # Trade Details
     trades_data = models.JSONField(null=True, blank=True, help_text="Individual trade records")
     equity_curve = models.JSONField(null=True, blank=True, help_text="Portfolio value over time")
+    metrics_data = models.JSONField(null=True, blank=True, help_text="Full computed metrics payload (including advanced metrics)")
     
     # Visibility & Sharing
     is_public = models.BooleanField(default=False, help_text="Whether this backtest is publicly shareable")

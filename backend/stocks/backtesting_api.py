@@ -204,6 +204,15 @@ def run_backtest(request, backtest_id):
         backtest.winning_trades = results.get('winning_trades')
         backtest.losing_trades = results.get('losing_trades')
         backtest.composite_score = results.get('composite_score')
+        # Persist the full metrics payload so the frontend can render advanced metrics.
+        try:
+            metrics_only = {
+                k: v for k, v in (results or {}).items()
+                if k not in ("trades_data", "equity_curve") and k is not None
+            }
+            backtest.metrics_data = metrics_only
+        except Exception:
+            backtest.metrics_data = None
         backtest.trades_data = results.get('trades_data', [])
         backtest.equity_curve = results.get('equity_curve', [])
         backtest.save()
@@ -221,20 +230,28 @@ def run_backtest(request, backtest_id):
                 # Silently fail if achievement checking fails
                 pass
 
+        # Build a results dict that includes advanced metrics when available.
+        base_results = {
+            'total_return': float(backtest.total_return) if backtest.total_return is not None else 0,
+            'annualized_return': float(backtest.annualized_return) if backtest.annualized_return is not None else 0,
+            'sharpe_ratio': float(backtest.sharpe_ratio) if backtest.sharpe_ratio is not None else 0,
+            'max_drawdown': float(backtest.max_drawdown) if backtest.max_drawdown is not None else 0,
+            'win_rate': float(backtest.win_rate) if backtest.win_rate is not None else 0,
+            'profit_factor': float(backtest.profit_factor) if backtest.profit_factor is not None else 0,
+            'total_trades': backtest.total_trades or 0,
+            'winning_trades': backtest.winning_trades or 0,
+            'losing_trades': backtest.losing_trades or 0,
+            'composite_score': float(backtest.composite_score) if backtest.composite_score is not None else 0,
+        }
+        if isinstance(backtest.metrics_data, dict):
+            # Merge in any additional metrics such as sortino/calmar/var/quality_grade, etc.
+            base_results.update(backtest.metrics_data)
+
         return JsonResponse({
             'success': True,
-            'results': {
-                'total_return': float(backtest.total_return) if backtest.total_return else 0,
-                'annualized_return': float(backtest.annualized_return) if backtest.annualized_return else 0,
-                'sharpe_ratio': float(backtest.sharpe_ratio) if backtest.sharpe_ratio else 0,
-                'max_drawdown': float(backtest.max_drawdown) if backtest.max_drawdown else 0,
-                'win_rate': float(backtest.win_rate) if backtest.win_rate else 0,
-                'profit_factor': float(backtest.profit_factor) if backtest.profit_factor else 0,
-                'total_trades': backtest.total_trades or 0,
-                'winning_trades': backtest.winning_trades or 0,
-                'losing_trades': backtest.losing_trades or 0,
-                'composite_score': float(backtest.composite_score) if backtest.composite_score else 0
-            },
+            'results': base_results,
+            'trades': backtest.trades_data or [],
+            'equity_curve': backtest.equity_curve or [],
             'achievements_unlocked': newly_unlocked_achievements
         })
     
@@ -257,7 +274,21 @@ def get_backtest(request, backtest_id):
     """Get backtest results"""
     try:
         backtest = BacktestRun.objects.get(id=backtest_id, user=request.user)
-        
+        results_payload = {
+            'total_return': float(backtest.total_return) if backtest.total_return else None,
+            'annualized_return': float(backtest.annualized_return) if backtest.annualized_return else None,
+            'sharpe_ratio': float(backtest.sharpe_ratio) if backtest.sharpe_ratio else None,
+            'max_drawdown': float(backtest.max_drawdown) if backtest.max_drawdown else None,
+            'win_rate': float(backtest.win_rate) if backtest.win_rate else None,
+            'profit_factor': float(backtest.profit_factor) if backtest.profit_factor else None,
+            'total_trades': backtest.total_trades,
+            'winning_trades': backtest.winning_trades,
+            'losing_trades': backtest.losing_trades,
+            'composite_score': float(backtest.composite_score) if backtest.composite_score else None
+        }
+        if isinstance(backtest.metrics_data, dict):
+            results_payload.update(backtest.metrics_data)
+
         return JsonResponse({
             'success': True,
             'backtest': {
@@ -278,16 +309,7 @@ def get_backtest(request, backtest_id):
                 'fork_count': backtest.fork_count,
                 'forked_from': backtest.forked_from_id,
                 'results': {
-                    'total_return': float(backtest.total_return) if backtest.total_return else None,
-                    'annualized_return': float(backtest.annualized_return) if backtest.annualized_return else None,
-                    'sharpe_ratio': float(backtest.sharpe_ratio) if backtest.sharpe_ratio else None,
-                    'max_drawdown': float(backtest.max_drawdown) if backtest.max_drawdown else None,
-                    'win_rate': float(backtest.win_rate) if backtest.win_rate else None,
-                    'profit_factor': float(backtest.profit_factor) if backtest.profit_factor else None,
-                    'total_trades': backtest.total_trades,
-                    'winning_trades': backtest.winning_trades,
-                    'losing_trades': backtest.losing_trades,
-                    'composite_score': float(backtest.composite_score) if backtest.composite_score else None
+                    **results_payload
                 },
                 'trades': backtest.trades_data,
                 'equity_curve': backtest.equity_curve,
@@ -337,6 +359,7 @@ def list_backtests(request):
                     'forked_from': b.forked_from_id,
                     'composite_score': float(b.composite_score) if b.composite_score else None,
                     'total_return': float(b.total_return) if b.total_return else None,
+                    'results': (b.metrics_data if isinstance(b.metrics_data, dict) else None),
                     'created_at': b.created_at.isoformat()
                 }
                 for b in backtests
@@ -453,6 +476,21 @@ def get_public_backtest(request, backtest_id):
         except Exception:
             pass
 
+        results_payload = {
+            'total_return': float(backtest.total_return) if backtest.total_return else None,
+            'annualized_return': float(backtest.annualized_return) if backtest.annualized_return else None,
+            'sharpe_ratio': float(backtest.sharpe_ratio) if backtest.sharpe_ratio else None,
+            'max_drawdown': float(backtest.max_drawdown) if backtest.max_drawdown else None,
+            'win_rate': float(backtest.win_rate) if backtest.win_rate else None,
+            'profit_factor': float(backtest.profit_factor) if backtest.profit_factor else None,
+            'total_trades': backtest.total_trades,
+            'composite_score': float(backtest.composite_score) if backtest.composite_score else None,
+            # For older records that pre-date metrics_data, fall back to grade from score.
+            'quality_grade': get_quality_grade(backtest.composite_score),
+        }
+        if isinstance(backtest.metrics_data, dict):
+            results_payload.update(backtest.metrics_data)
+
         return JsonResponse({
             'success': True,
             'backtest': {
@@ -470,17 +508,7 @@ def get_public_backtest(request, backtest_id):
                 'creator': {
                     'username': getattr(backtest.user, 'username', None),
                 },
-                'results': {
-                    'total_return': float(backtest.total_return) if backtest.total_return else None,
-                    'annualized_return': float(backtest.annualized_return) if backtest.annualized_return else None,
-                    'sharpe_ratio': float(backtest.sharpe_ratio) if backtest.sharpe_ratio else None,
-                    'max_drawdown': float(backtest.max_drawdown) if backtest.max_drawdown else None,
-                    'win_rate': float(backtest.win_rate) if backtest.win_rate else None,
-                    'profit_factor': float(backtest.profit_factor) if backtest.profit_factor else None,
-                    'total_trades': backtest.total_trades,
-                    'composite_score': float(backtest.composite_score) if backtest.composite_score else None,
-                    'quality_grade': get_quality_grade(backtest.composite_score)
-                },
+                'results': results_payload,
                 'equity_curve': backtest.equity_curve,
                 'created_at': backtest.created_at.isoformat()
             }
@@ -590,6 +618,21 @@ def get_shared_backtest(request, slug):
         except Exception:
             pass
 
+        results_payload = {
+            "total_return": float(backtest.total_return) if backtest.total_return else None,
+            "annualized_return": float(backtest.annualized_return) if backtest.annualized_return else None,
+            "sharpe_ratio": float(backtest.sharpe_ratio) if backtest.sharpe_ratio else None,
+            "max_drawdown": float(backtest.max_drawdown) if backtest.max_drawdown else None,
+            "win_rate": float(backtest.win_rate) if backtest.win_rate else None,
+            "profit_factor": float(backtest.profit_factor) if backtest.profit_factor else None,
+            "total_trades": backtest.total_trades,
+            "composite_score": float(backtest.composite_score) if backtest.composite_score else None,
+            # For older records that pre-date metrics_data, fall back to grade from score.
+            "quality_grade": get_quality_grade(backtest.composite_score),
+        }
+        if isinstance(backtest.metrics_data, dict):
+            results_payload.update(backtest.metrics_data)
+
         return JsonResponse({
             "success": True,
             "backtest": {
@@ -607,17 +650,7 @@ def get_shared_backtest(request, slug):
                 "creator": {
                     "username": getattr(backtest.user, "username", None),
                 },
-                "results": {
-                    "total_return": float(backtest.total_return) if backtest.total_return else None,
-                    "annualized_return": float(backtest.annualized_return) if backtest.annualized_return else None,
-                    "sharpe_ratio": float(backtest.sharpe_ratio) if backtest.sharpe_ratio else None,
-                    "max_drawdown": float(backtest.max_drawdown) if backtest.max_drawdown else None,
-                    "win_rate": float(backtest.win_rate) if backtest.win_rate else None,
-                    "profit_factor": float(backtest.profit_factor) if backtest.profit_factor else None,
-                    "total_trades": backtest.total_trades,
-                    "composite_score": float(backtest.composite_score) if backtest.composite_score else None,
-                    "quality_grade": get_quality_grade(backtest.composite_score),
-                },
+                "results": results_payload,
                 "equity_curve": backtest.equity_curve,
                 "created_at": backtest.created_at.isoformat(),
             }

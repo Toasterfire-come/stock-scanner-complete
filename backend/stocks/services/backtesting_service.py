@@ -325,7 +325,15 @@ def exit_condition(data, index, entry_price, entry_index):
             # NOTE: This executes dynamically-generated code. Treat as high-risk.
             # We restrict builtins and perform a basic denylist check, but this is
             # not a complete sandbox. For production, run this in an isolated worker.
-            forbidden = ("import ", "open(", "exec(", "eval(", "__", "os.", "sys.", "subprocess", "socket", "pathlib")
+            # The code generator (and LLMs) often include `import` statements, but we don't
+            # expose `__import__` in builtins. Strip imports to keep the execution surface
+            # small and deterministic (pd/np are injected via the namespace below).
+            code = "\n".join(
+                line for line in code.splitlines()
+                if not re.match(r"^\s*(import|from)\s+", line)
+            )
+
+            forbidden = ("open(", "exec(", "eval(", "__", "os.", "sys.", "subprocess", "socket", "pathlib")
             if any(tok in code for tok in forbidden):
                 return {"error": "Generated strategy code contains forbidden operations"}
 
@@ -406,6 +414,7 @@ def exit_condition(data, index, entry_price, entry_index):
                             cash = position['shares'] * exit_price
                             
                             trade_return = ((exit_price - position['entry_price']) / position['entry_price']) * 100
+                            trade_profit = (exit_price - position['entry_price']) * position['shares']
                             
                             trades.append({
                                 'entry_date': str(position['entry_date']),
@@ -414,7 +423,8 @@ def exit_condition(data, index, entry_price, entry_index):
                                 'exit_price': float(exit_price),
                                 'shares': float(position['shares']),
                                 'return_pct': float(trade_return),
-                                'profit': float(cash - initial_capital)
+                                # Profit should be per-trade P&L, not cumulative vs initial capital.
+                                'profit': float(trade_profit)
                             })
                             
                             position = None
@@ -433,6 +443,7 @@ def exit_condition(data, index, entry_price, entry_index):
                 final_price = data.iloc[-1]['Close']
                 cash = position['shares'] * final_price
                 trade_return = ((final_price - position['entry_price']) / position['entry_price']) * 100
+                trade_profit = (final_price - position['entry_price']) * position['shares']
                 trades.append({
                     'entry_date': str(position['entry_date']),
                     'exit_date': str(data.iloc[-1]['Date']),
@@ -440,7 +451,8 @@ def exit_condition(data, index, entry_price, entry_index):
                     'exit_price': float(final_price),
                     'shares': float(position['shares']),
                     'return_pct': float(trade_return),
-                    'profit': float(cash - initial_capital)
+                    # Profit should be per-trade P&L, not cumulative vs initial capital.
+                    'profit': float(trade_profit)
                 })
             
             # Calculate metrics
