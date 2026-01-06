@@ -321,13 +321,31 @@ def exit_condition(data, index, entry_price, entry_index):
             Dictionary with backtest metrics
         """
         try:
-            # Create execution namespace
-            namespace = {
-                'pd': pd,
-                'np': np,
-                'data': data,
+            # NOTE: This executes dynamically-generated code. Treat as high-risk.
+            # We restrict builtins and perform a basic denylist check, but this is
+            # not a complete sandbox. For production, run this in an isolated worker.
+            forbidden = ("import ", "open(", "exec(", "eval(", "__", "os.", "sys.", "subprocess", "socket", "pathlib")
+            if any(tok in code for tok in forbidden):
+                return {"error": "Generated strategy code contains forbidden operations"}
+
+            safe_builtins = {
+                "abs": abs,
+                "min": min,
+                "max": max,
+                "sum": sum,
+                "len": len,
+                "range": range,
+                "round": round,
             }
-            
+
+            # Create execution namespace (restricted)
+            namespace = {
+                "__builtins__": safe_builtins,
+                "pd": pd,
+                "np": np,
+                "data": data,
+            }
+
             # Execute the generated code to define functions
             exec(code, namespace)
             

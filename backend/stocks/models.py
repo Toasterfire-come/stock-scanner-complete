@@ -4270,7 +4270,8 @@ class FeatureFlag(models.Model):
         if self.rollout_strategy == 'percentage':
             # Deterministic percentage based on user ID
             import hashlib
-            hash_value = int(hashlib.md5(f"{self.name}{user.id}".encode()).hexdigest(), 16)
+            # Not used for security; just stable bucketing.
+            hash_value = int(hashlib.sha256(f"{self.name}{user.id}".encode()).hexdigest(), 16)
             return (hash_value % 100) < self.rollout_percentage
 
         if self.rollout_strategy == 'tier_based':

@@ -575,14 +575,14 @@ Learn from my mistakes 👉 ${shareUrl}`;
     } catch {
       // ignore
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load weekly challenge
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/challenges/current/`);
+        const baseUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
+        const res = await fetch(`${baseUrl}/api/challenges/current/`);
         const data = await res.json();
         if (data?.success) setWeeklyChallenge(data.challenge);
       } catch {

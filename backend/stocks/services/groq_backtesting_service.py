@@ -576,7 +576,24 @@ def exit_condition(data, index, entry_price, entry_index):
     def _execute_strategy(self, code: str, data: pd.DataFrame, initial_capital: float) -> Dict:
         """Execute the trading strategy"""
         try:
-            namespace = {'pd': pd, 'np': np, 'data': data}
+            # NOTE: This executes dynamically-generated code. Treat as high-risk.
+            # We restrict builtins and perform a basic denylist check, but this is
+            # not a complete sandbox. For production, run this in an isolated worker.
+            forbidden = ("import ", "open(", "exec(", "eval(", "__", "os.", "sys.", "subprocess", "socket", "pathlib")
+            if any(tok in code for tok in forbidden):
+                return {"error": "Generated strategy code contains forbidden operations"}
+
+            safe_builtins = {
+                "abs": abs,
+                "min": min,
+                "max": max,
+                "sum": sum,
+                "len": len,
+                "range": range,
+                "round": round,
+            }
+
+            namespace = {"__builtins__": safe_builtins, "pd": pd, "np": np, "data": data}
             exec(code, namespace)
             
             entry_condition = namespace.get('entry_condition')
