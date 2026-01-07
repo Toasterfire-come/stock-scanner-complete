@@ -24,7 +24,7 @@ const ProgressDashboard = () => {
 
   const fetchUserStats = async () => {
     try {
-      const response = await api.get('/api/education/user-stats/overview/');
+      const response = await api.get('/education/user-stats/overview/');
       setStats(response.data);
     } catch (error) {
       logger.error('Error fetching stats:', error);
@@ -35,7 +35,7 @@ const ProgressDashboard = () => {
 
   const fetchRecentProgress = async () => {
     try {
-      const response = await api.get('/api/education/user-stats/progress/');
+      const response = await api.get('/education/user-stats/progress/');
       setRecentProgress((response.data || []).slice(0, 5));
     } catch (error) {
       logger.error('Error fetching progress:', error);
@@ -44,7 +44,7 @@ const ProgressDashboard = () => {
 
   const fetchCertificates = async () => {
     try {
-      const response = await api.get('/api/education/user-stats/certificates/');
+      const response = await api.get('/education/user-stats/certificates/');
       setCertificates(response.data || []);
     } catch (error) {
       logger.error('Error fetching certificates:', error);

@@ -44,7 +44,9 @@
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.16",
     "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
+    "jspdf": "^4.0.0",
     "lightweight-charts": "^4.1.4",
     "lucide-react": "^0.507.0",
     "next-themes": "^0.4.6",
@@ -55,6 +57,7 @@
     "react-dom": "18.3.1",
     "react-helmet-async": "^2.0.5",
     "react-hook-form": "^7.56.2",
+    "react-joyride": "^2.9.3",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.1",
     "react-router-dom": "^7.5.1",
@@ -82,7 +85,7 @@
     "deploy:htaccess": "node scripts/update-htaccess.js",
     "test": "craco test",
     "analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
-    "security:audit": "npm audit --audit-level moderate",
+    "security:audit": "node scripts/security-audit.js",
     "security:check": "node -e \"require('./src/lib/security').validateEnvironment() && console.log('✅ Security validation passed')\"",
     "icons:generate": "node scripts/generate-icons.js"
   },
@@ -101,15 +104,9 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@craco/craco": "^7.1.0",
-    "@eslint/js": "9.23.0",
     "@playwright/test": "^1.55.1",
     "autoprefixer": "^10.4.20",
     "cross-env": "^10.1.0",
-    "eslint": "9.23.0",
-    "eslint-plugin-import": "2.31.0",
-    "eslint-plugin-jsx-a11y": "6.10.2",
-    "eslint-plugin-react": "7.37.4",
-    "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "15.15.0",
     "lighthouse": "^12.8.2",
     "png-to-ico": "^2.1.8",
@@ -119,6 +116,10 @@
     "sharp": "^0.33.5",
     "ssh2-sftp-client": "^12.0.1",
     "tailwindcss": "^3.4.17"
+  },
+  "resolutions": {
+    "nth-check": "^2.1.1",
+    "postcss": "^8.4.49"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

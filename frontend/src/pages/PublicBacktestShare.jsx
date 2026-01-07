@@ -14,31 +14,40 @@ import {
   ExternalLink,
   Share2,
   Twitter,
-  Linkedin
+  Linkedin,
+  GitBranch
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { toast } from "sonner";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { forkSharedBacktest } from "../api/client";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
 
 export default function PublicBacktestShare() {
-  const { backtest_id } = useParams();
+  const { backtest_id, shareSlug } = useParams();
   const navigate = useNavigate();
   const [backtest, setBacktest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const idOrSlug = shareSlug || backtest_id;
+  const isNumericId = /^\d+$/.test(String(idOrSlug || ""));
+
   useEffect(() => {
     fetchPublicBacktest();
-  }, [backtest_id]);
+  }, [idOrSlug]);
 
   const fetchPublicBacktest = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/backtest/public/${backtest_id}/`);
+      const endpoint = isNumericId
+        ? `${API_BASE_URL}/api/backtesting/public/${idOrSlug}/`
+        : `${API_BASE_URL}/api/share/backtests/${encodeURIComponent(idOrSlug)}/`;
+
+      const response = await fetch(endpoint);
       const data = await response.json();
 
       if (!data.success) {
@@ -97,6 +106,47 @@ export default function PublicBacktestShare() {
   const copyShareLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied to clipboard!");
+  };
+
+  const copyStrategyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(backtest?.strategy_text || "");
+      toast.success("Strategy prompt copied!");
+    } catch {
+      toast.error("Failed to copy strategy prompt");
+    }
+  };
+
+  const forkThisStrategy = async () => {
+    // Requires auth (ProtectedRoute will handle redirect); store prefill in localStorage either way.
+    try {
+      // Prefer server-side fork (tracks fork_count and lineage)
+      if (!isNumericId && idOrSlug) {
+        const data = await forkSharedBacktest(idOrSlug);
+        if (data?.success && data.fork_backtest_id) {
+          localStorage.setItem("backtest_fork_prefill", JSON.stringify({
+            backtest_id: data.fork_backtest_id,
+            creator_username: backtest?.creator?.username || null,
+          }));
+          navigate("/app/backtesting");
+          return;
+        }
+      }
+    } catch {
+      // fall back to client-side prefill
+    }
+
+    localStorage.setItem("backtest_fork_prefill", JSON.stringify({
+      name: `${backtest?.name || "Strategy"} (Fork)`,
+      strategy_text: backtest?.strategy_text || "",
+      category: backtest?.category,
+      symbols: backtest?.symbols || [],
+      start_date: backtest?.start_date,
+      end_date: backtest?.end_date,
+      initial_capital: backtest?.initial_capital,
+      creator_username: backtest?.creator?.username || null,
+    }));
+    navigate("/app/backtesting");
   };
 
   if (loading) {
@@ -197,6 +247,11 @@ export default function PublicBacktestShare() {
                     {qualityGrade}
                   </Badge>
                 </div>
+                {backtest.creator?.username && (
+                  <div className="text-sm text-gray-500 mb-2">
+                    by <a className="underline" href={`/u/${encodeURIComponent(backtest.creator.username)}`}>@{backtest.creator.username}</a>
+                  </div>
+                )}
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <Target className="h-4 w-4" />
@@ -214,7 +269,14 @@ export default function PublicBacktestShare() {
               </div>
 
               {/* Share Buttons */}
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={copyStrategyPrompt}>
+                  Copy Strategy
+                </Button>
+                <Button variant="outline" size="sm" onClick={forkThisStrategy}>
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Fork
+                </Button>
                 <Button variant="outline" size="sm" onClick={shareToTwitter}>
                   <Twitter className="h-4 w-4 text-blue-500" />
                 </Button>

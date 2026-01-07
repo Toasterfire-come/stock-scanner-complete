@@ -71,7 +71,7 @@ def _attach_rate_limit_headers(request, resp: Response):
             ident = f"user_{getattr(request.user, 'id', '0')}"
             limit = int(getattr(settings, 'RATE_LIMIT_AUTHENTICATED_USERS', 1000))
         else:
-            ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0] or request.META.get('REMOTE_ADDR', '0.0.0.0')
+            ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0] or request.META.get('REMOTE_ADDR', '127.0.0.1')
             ident = f"ip_{ip}"
             limit = int(getattr(settings, 'RATE_LIMIT_FREE_USERS', 100))
 
@@ -132,7 +132,7 @@ def _validate_email_or_fallback(provided_email: str, fallback_email: str) -> str
 
 @csrf_exempt
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_list_api(request):
     """List alerts for the authenticated user."""
@@ -154,7 +154,7 @@ def alerts_list_api(request):
 
 @csrf_exempt
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_meta_api(request):
     """
@@ -187,7 +187,7 @@ def alerts_meta_api(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_create_api(request):
     """Create a new price alert for the authenticated user."""
@@ -264,7 +264,7 @@ def alerts_create_api(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_toggle_api(request, alert_id: int):
     """Toggle or set active state for a user's alert."""
@@ -304,7 +304,7 @@ def alerts_toggle_api(request, alert_id: int):
 
 @csrf_exempt
 @api_view(['POST', 'DELETE'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_delete_api(request, alert_id: int):
     """Delete a user's alert."""
@@ -328,7 +328,7 @@ def alerts_delete_api(request, alert_id: int):
 # Unread count (used for header badge)
 @csrf_exempt
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_unread_count_api(request):
     try:

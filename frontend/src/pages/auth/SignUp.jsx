@@ -17,8 +17,10 @@ import { setReferralCookie, normalizeReferralCode } from "../../lib/referral";
 import { useAuth } from "../../context/SecureAuthContext";
 import logger from '../../lib/logger';
 
-// WHITELIST MODE: Only whitelisted emails can register
-const WHITELIST_MODE = true;
+// Optional beta/whitelist gating (defaults to off unless explicitly enabled).
+const BETA_TESTING_MODE = String(process.env.REACT_APP_BETA_TESTING_MODE || "").toLowerCase() === "true";
+// WHITELIST MODE: Only whitelisted emails can register (when list is provided)
+const WHITELIST_MODE = String(process.env.REACT_APP_WHITELIST_MODE || "").toLowerCase() === "true";
 const WHITELISTED_EMAILS = process.env.REACT_APP_WHITELISTED_EMAILS
   ? process.env.REACT_APP_WHITELISTED_EMAILS.split(',').map(e => e.trim().toLowerCase())
   : [];

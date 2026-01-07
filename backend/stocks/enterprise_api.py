@@ -69,7 +69,7 @@ def enterprise_contact_api(request):
             return Response({ 'success': False, 'message': 'invalid email' }, status=status.HTTP_400_BAD_REQUEST)
 
         # Simple abuse control by IP
-        ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0] or request.META.get('REMOTE_ADDR', '0.0.0.0')
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0] or request.META.get('REMOTE_ADDR', '127.0.0.1')
         if not _rate_limit_ok(f"enterprise_contact_{ip}"):
             return Response({ 'success': False, 'message': 'Too many requests, please try again later' }, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
@@ -102,7 +102,7 @@ def enterprise_quote_request_api(request):
         except ValidationError:
             return Response({ 'success': False, 'message': 'invalid email' }, status=status.HTTP_400_BAD_REQUEST)
 
-        ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0] or request.META.get('REMOTE_ADDR', '0.0.0.0')
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0] or request.META.get('REMOTE_ADDR', '127.0.0.1')
         if not _rate_limit_ok(f"enterprise_quote_{ip}"):
             return Response({ 'success': False, 'message': 'Too many requests, please try again later' }, status=status.HTTP_429_TOO_MANY_REQUESTS)
 

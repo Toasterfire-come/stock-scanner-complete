@@ -7,7 +7,9 @@ from .settings import *
 
 # Security settings for external access
 DEBUG = False
-SECRET_KEY = os.environ.get('SECRET_KEY', os.environ.get('DJANGO_SECRET_KEY', 'your-secret-key-here'))
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError("DJANGO_SECRET_KEY (or SECRET_KEY) must be set in production.")
 
 # Inherit ALLOWED_HOSTS and CORS from base settings.py which reads environment variables
 # Do not override here; ensure DJANGO_ALLOWED_HOSTS and CSRF/CORS envs are set in .env
@@ -17,7 +19,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', os.environ.get('DJANGO_SECRET_KEY', 'y
 # Rate limiting - use safe throttles that tolerate cache outages
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        # Security: require auth by default in production.
+        # Public endpoints must explicitly opt into AllowAny at the view level.
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -53,7 +57,8 @@ elif cache_backend == "file":
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-            "LOCATION": os.environ.get("CACHE_DIR", "/tmp/django_cache"),
+            # Avoid /tmp by default (shared temp dir). Allow override via CACHE_DIR.
+            "LOCATION": os.environ.get("CACHE_DIR", str(BASE_DIR / "django_cache")),
             "TIMEOUT": int(os.environ.get("CACHE_TIMEOUT", "300")),
         }
     }

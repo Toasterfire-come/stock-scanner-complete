@@ -4,7 +4,7 @@ import { Award, X, Twitter, Linkedin, Share2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
 
 export default function AchievementUnlock({ achievement, onClose }) {
   const [isSharing, setIsSharing] = useState(false);

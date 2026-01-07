@@ -35,7 +35,8 @@ import {
   getPlanLimits,
   listPortfolios,
   createPortfolio,
-  createShareLinkForPortfolio
+  createShareLinkForPortfolio,
+  revokeShareLinkForPortfolio
 } from "../../api/client";
 import logger from '../../lib/logger';
 
@@ -61,6 +62,7 @@ const Portfolio = () => {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [investInput, setInvestInput] = useState({});
   const [priceMap, setPriceMap] = useState({});
+  const [shareLink, setShareLink] = useState(null);
 
   useEffect(() => {
     fetchAllPortfolioData();
@@ -126,6 +128,11 @@ const Portfolio = () => {
       if (!selectedPortfolioId && pList.length > 0) {
         setSelectedPortfolioId(pList[0].id);
       }
+      // Cache share link if present in list payload (best-effort)
+      try {
+        const sel = (pList || []).find((p) => String(p.id) === String(selectedPortfolioId || pList?.[0]?.id));
+        setShareLink(sel?.share_url || sel?.share_link || null);
+      } catch { setShareLink(null); }
       setPortfolio(portfolioResponse);
       setAnalytics(null);
       // Build a symbol -> current_price map from the stock list
@@ -476,14 +483,25 @@ const Portfolio = () => {
           <Button variant="outline" onClick={() => setIsCreatePortfolioOpen(true)}>New Portfolio</Button>
         </div>
         <div className="flex gap-2">
+          {(() => {
+            const sel = portfolios.find(p => String(p.id) === String(selectedPortfolioId));
+            const isPublic = !!sel?.is_public;
+            return (
+              <Badge variant="outline" className={isPublic ? "border-green-300 text-green-700 bg-green-50" : "border-gray-300 text-gray-700 bg-white"}>
+                {isPublic ? "Public" : "Private"}
+              </Badge>
+            );
+          })()}
           <Button variant="outline" onClick={async () => {
             try {
               if (!selectedPortfolioId) { toast.error('Select a portfolio'); return; }
               const res = await createShareLinkForPortfolio(selectedPortfolioId);
               if (res?.success && res?.url) {
                 const link = `${window.location.origin}${res.url}`;
+                setShareLink(link);
                 await navigator.clipboard.writeText(link);
                 toast.success('Share link copied');
+                await fetchAllPortfolioData();
               } else {
                 toast.error('Failed to create share link');
               }
@@ -491,6 +509,21 @@ const Portfolio = () => {
               toast.error('Failed to create share link');
             }
           }}>Share</Button>
+          <Button variant="outline" onClick={async () => {
+            try {
+              if (!selectedPortfolioId) { toast.error('Select a portfolio'); return; }
+              const res = await revokeShareLinkForPortfolio(selectedPortfolioId);
+              if (res?.success) {
+                toast.success("Sharing revoked");
+                setShareLink(null);
+                await fetchAllPortfolioData();
+              } else {
+                toast.error(res?.message || "Failed to revoke");
+              }
+            } catch {
+              toast.error("Failed to revoke");
+            }
+          }}>Make Private</Button>
           <Button onClick={handleExportPortfolio} variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export

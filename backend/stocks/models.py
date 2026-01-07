@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from decimal import Decimal
 import json
 from django.utils import timezone
+import uuid
 
 class Stock(models.Model):
     # Basic stock info
@@ -361,6 +362,49 @@ class UserPortfolio(models.Model):
         if self.total_cost > 0:
             return (self.total_return / self.total_cost) * 100
         return 0
+
+
+class SharedResourceLink(models.Model):
+    """
+    Public share links for portfolios and watchlists.
+    Stored as a stable slug so URLs can be shared externally.
+    """
+    RESOURCE_CHOICES = [
+        ("portfolio", "Portfolio"),
+        ("watchlist", "Watchlist"),
+    ]
+
+    slug = models.SlugField(max_length=64, unique=True, db_index=True)
+    resource_type = models.CharField(max_length=20, choices=RESOURCE_CHOICES)
+
+    portfolio = models.ForeignKey(
+        UserPortfolio,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="share_links",
+    )
+    watchlist = models.ForeignKey(
+        "UserWatchlist",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="share_links",
+    )
+
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="shared_links")
+    created_at = models.DateTimeField(auto_now_add=True)
+    view_count = models.PositiveIntegerField(default=0)
+    last_viewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["resource_type", "slug"]),
+            models.Index(fields=["created_by", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.resource_type}:{self.slug}"
 
 class PortfolioHolding(models.Model):
     """Individual stock positions within portfolios"""
@@ -885,6 +929,23 @@ class NotificationHistory(models.Model):
         return f"{self.title} - {self.user.username}"
 
 
+class FavoriteTicker(models.Model):
+    """User favorite tickers (used for cross-device sync)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_tickers")
+    ticker = models.CharField(max_length=16, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "ticker")
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["user", "ticker"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} ❤️ {self.ticker}"
+
+
 # Partner referral analytics
 class ReferralClickEvent(models.Model):
     """Tracks referral clicks for partner codes (e.g., ADAM50)."""
@@ -987,9 +1048,15 @@ class BacktestRun(models.Model):
     # Trade Details
     trades_data = models.JSONField(null=True, blank=True, help_text="Individual trade records")
     equity_curve = models.JSONField(null=True, blank=True, help_text="Portfolio value over time")
+    metrics_data = models.JSONField(null=True, blank=True, help_text="Full computed metrics payload (including advanced metrics)")
     
     # Visibility & Sharing
-    is_public = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=False, help_text="Whether this backtest is publicly shareable")
+    share_slug = models.SlugField(max_length=64, unique=True, null=True, blank=True, db_index=True, help_text="Public share slug (stable URL)")
+    public_view_count = models.PositiveIntegerField(default=0, help_text="Public page views")
+    shared_at = models.DateTimeField(null=True, blank=True, help_text="When backtest was first made public")
+    forked_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='forks')
+    fork_count = models.PositiveIntegerField(default=0, help_text="How many times this backtest has been forked")
     is_baseline = models.BooleanField(default=False, help_text="Official baseline strategy")
     
     # Timestamps
@@ -3742,6 +3809,158 @@ class TradingJournal(models.Model):
         return f"{self.user.email} - {self.title} ({self.created_at.strftime('%Y-%m-%d')})"
 
 
+class TradeJournalEntry(models.Model):
+    """
+    Trade-log style journal entry used by the frontend Trading Journal page.
+
+    This is intentionally separate from `TradingJournal` (reflection journal) to
+    support P&L analytics and structured trade fields.
+    """
+    STATUS_CHOICES = [
+        ("open", "Open"),
+        ("win", "Win"),
+        ("loss", "Loss"),
+        ("breakeven", "Breakeven"),
+    ]
+    SIDE_CHOICES = [
+        ("long", "Long"),
+        ("short", "Short"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="trade_journal_entries")
+
+    date = models.DateTimeField(default=timezone.now, db_index=True)
+    symbol = models.CharField(max_length=16, db_index=True)
+    type = models.CharField(max_length=10, choices=SIDE_CHOICES, default="long")
+
+    entry_price = models.DecimalField(max_digits=15, decimal_places=6, null=True, blank=True)
+    exit_price = models.DecimalField(max_digits=15, decimal_places=6, null=True, blank=True)
+    shares = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+
+    strategy = models.CharField(max_length=200, blank=True)
+    setup = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+    emotions = models.TextField(blank=True)
+    lessons = models.TextField(blank=True)
+    tags = models.JSONField(default=list, blank=True)
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="open", db_index=True)
+    screenshot_url = models.URLField(blank=True)
+
+    pnl = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    pnl_percent = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-date"]),
+            models.Index(fields=["user", "symbol"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} {self.symbol} {self.type} ({self.status})"
+
+
+class UserExportJob(models.Model):
+    """
+    Lightweight export job record for export manager / download history.
+
+    Stores small CSV content directly for now (sufficient for MVP).
+    """
+    STATUS_CHOICES = [
+        ("completed", "Completed"),
+        ("processing", "Processing"),
+        ("failed", "Failed"),
+    ]
+    TYPE_CHOICES = [
+        ("stocks", "Stocks"),
+        ("portfolio", "Portfolio"),
+        ("watchlist", "Watchlist"),
+        ("custom_report", "Custom Report"),
+    ]
+    FORMAT_CHOICES = [
+        ("csv", "CSV"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="export_jobs")
+    name = models.CharField(max_length=200)
+    type = models.CharField(max_length=32, choices=TYPE_CHOICES)
+    format = models.CharField(max_length=16, choices=FORMAT_CHOICES, default="csv")
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="processing")
+    error = models.TextField(blank=True)
+
+    payload = models.JSONField(default=dict, blank=True)
+
+    # Small outputs stored in DB for MVP; can be replaced with S3 later.
+    content_type = models.CharField(max_length=100, default="text/csv")
+    filename = models.CharField(max_length=255, blank=True)
+    content_text = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    download_count = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["user", "type"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} export {self.type} ({self.status})"
+
+
+class UserExportSchedule(models.Model):
+    """
+    Persisted schedule configuration (manual run only for MVP).
+    """
+    FREQ_CHOICES = [
+        ("daily", "Daily"),
+        ("weekly", "Weekly"),
+        ("monthly", "Monthly"),
+    ]
+    FORMAT_CHOICES = [
+        ("csv", "CSV"),
+    ]
+    TYPE_CHOICES = UserExportJob.TYPE_CHOICES
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="export_schedules")
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    export_type = models.CharField(max_length=32, choices=TYPE_CHOICES, default="portfolio")
+    format = models.CharField(max_length=16, choices=FORMAT_CHOICES, default="csv")
+    frequency = models.CharField(max_length=16, choices=FREQ_CHOICES, default="weekly")
+    time = models.CharField(max_length=10, default="09:00")  # HH:MM
+    timezone = models.CharField(max_length=64, default="UTC")
+    enabled = models.BooleanField(default=True)
+    retention_days = models.IntegerField(default=30)
+
+    sms_notifications = models.BooleanField(default=False)
+    sms_recipients = models.CharField(max_length=200, blank=True)
+
+    last_run_at = models.DateTimeField(null=True, blank=True)
+    next_run_at = models.DateTimeField(null=True, blank=True)
+    run_count = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["user", "enabled"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} schedule {self.name}"
+
+
 class PerformanceReview(models.Model):
     """
     Monthly automated performance reviews.
@@ -4222,7 +4441,8 @@ class FeatureFlag(models.Model):
         if self.rollout_strategy == 'percentage':
             # Deterministic percentage based on user ID
             import hashlib
-            hash_value = int(hashlib.md5(f"{self.name}{user.id}".encode()).hexdigest(), 16)
+            # Not used for security; just stable bucketing.
+            hash_value = int(hashlib.sha256(f"{self.name}{user.id}".encode()).hexdigest(), 16)
             return (hash_value % 100) < self.rollout_percentage
 
         if self.rollout_strategy == 'tier_based':

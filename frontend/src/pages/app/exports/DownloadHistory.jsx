@@ -23,6 +23,8 @@ import {
 import { useAuth } from '../../../context/SecureAuthContext';
 import { toast } from 'sonner';
 import logger from '../../../lib/logger';
+import { listExportHistory, downloadReport } from '../../../api/client';
+import { downloadBlob } from '../../../lib/downloads';
 
 const DownloadHistory = () => {
   const { user } = useAuth();
@@ -45,79 +47,30 @@ const DownloadHistory = () => {
   const loadDownloadHistory = async () => {
     setLoading(true);
     try {
-      // Mock download history data
-      const mockDownloads = [
-        {
-          id: 1,
-          name: 'Portfolio Holdings Export',
-          type: 'portfolio',
-          format: 'CSV',
-          size: '156 KB',
-          status: 'completed',
-          created_at: '2024-01-20T10:30:00Z',
-          expires_at: '2024-02-19T10:30:00Z',
-          download_count: 3,
-          source: 'manual',
-          file_url: '#'
-        },
-        {
-          id: 2,
-          name: 'Q1 Performance Report',
-          type: 'custom_report',
-          format: 'PDF',
-          size: '2.4 MB',
-          status: 'completed',
-          created_at: '2024-01-19T15:45:00Z',
-          expires_at: '2024-02-18T15:45:00Z',
-          download_count: 1,
-          source: 'scheduled',
-          file_url: '#'
-        },
-        {
-          id: 3,
-          name: 'Stocks Database Export',
-          type: 'stocks',
-          format: 'CSV',
-          size: '8.7 MB',
-          status: 'completed',
-          created_at: '2024-01-18T09:15:00Z',
-          expires_at: '2024-02-17T09:15:00Z',
-          download_count: 0,
-          source: 'manual',
-          file_url: '#'
-        },
-        {
-          id: 4,
-          name: 'Watchlist Export',
-          type: 'watchlist',
-          format: 'XLSX',
-          size: '245 KB',
-          status: 'processing',
-          created_at: '2024-01-20T14:20:00Z',
-          expires_at: '2024-02-19T14:20:00Z',
-          download_count: 0,
-          source: 'manual',
-          file_url: null
-        },
-        {
-          id: 5,
-          name: 'Failed Export Attempt',
-          type: 'portfolio',
-          format: 'PDF',
+      const res = await listExportHistory();
+      if (res?.success) {
+        const items = (res.data || []).map((j) => ({
+          id: j.id,
+          name: j.name,
+          type: j.type,
+          format: String(j.format || 'csv').toUpperCase(),
           size: null,
-          status: 'failed',
-          created_at: '2024-01-17T11:00:00Z',
+          status: j.status,
+          created_at: j.created_at,
           expires_at: null,
-          download_count: 0,
-          source: 'scheduled',
-          file_url: null,
-          error: 'Insufficient data for report generation'
-        }
-      ];
-      setDownloads(mockDownloads);
+          download_count: Number(j.download_count || 0),
+          source: 'backend',
+          file_url: j.status === 'completed' ? `/api/reports/${j.id}/download` : null,
+          error: j.error || null
+        }));
+        setDownloads(items);
+        return;
+      }
+      setDownloads([]);
     } catch (error) {
       logger.error('Failed to load download history:', error);
       toast.error('Failed to load download history');
+      setDownloads([]);
     } finally {
       setLoading(false);
     }
@@ -178,15 +131,10 @@ const DownloadHistory = () => {
     }
 
     try {
-      // Simulate download
+      const blob = await downloadReport(download.id);
+      downloadBlob(blob, `${download.name}.${download.format.toLowerCase()}`);
       toast.success(`Downloading ${download.name}...`);
-      
-      // Update download count
-      setDownloads(prev => prev.map(d => 
-        d.id === download.id 
-          ? { ...d, download_count: d.download_count + 1 }
-          : d
-      ));
+      await loadDownloadHistory();
     } catch (error) {
       logger.error('Download failed:', error);
       toast.error('Download failed');

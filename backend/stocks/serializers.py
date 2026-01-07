@@ -11,7 +11,9 @@ from .models import (
     CopiedTrade, StrategyShare, ReferralReward,
     # Phase 9 - Retention & Habits
     TradingJournal, PerformanceReview, UserCustomIndicator,
-    TradeExport, AlertTemplate, TriggeredAlert
+    TradeExport, AlertTemplate, TriggeredAlert,
+    TradeJournalEntry,
+    UserExportJob, UserExportSchedule,
 )
 
 User = get_user_model()
@@ -153,6 +155,51 @@ class TradingJournalSerializer(serializers.ModelSerializer):
             'chart_screenshot_url', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user_email', 'created_at', 'updated_at']
+
+
+class TradeJournalEntrySerializer(serializers.ModelSerializer):
+    """Serializer for TradeJournalEntry (trade log)."""
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = TradeJournalEntry
+        fields = [
+            'id', 'user', 'user_email', 'date', 'symbol', 'type',
+            'entry_price', 'exit_price', 'shares',
+            'strategy', 'setup', 'notes', 'emotions', 'lessons',
+            'tags', 'status', 'screenshot_url',
+            'pnl', 'pnl_percent',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user', 'user_email', 'created_at', 'updated_at']
+
+
+class UserExportJobSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = UserExportJob
+        fields = [
+            "id", "user", "user_email", "name", "type", "format", "status",
+            "error", "payload", "content_type", "filename",
+            "created_at", "completed_at", "download_count",
+        ]
+        read_only_fields = ["id", "user", "user_email", "created_at", "completed_at", "download_count", "content_type", "filename"]
+
+
+class UserExportScheduleSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = UserExportSchedule
+        fields = [
+            "id", "user", "user_email",
+            "name", "description", "export_type", "format", "frequency", "time", "timezone",
+            "enabled", "retention_days", "sms_notifications", "sms_recipients",
+            "last_run_at", "next_run_at", "run_count",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "user", "user_email", "last_run_at", "next_run_at", "run_count", "created_at", "updated_at"]
 
 
 class PerformanceReviewSerializer(serializers.ModelSerializer):

@@ -180,9 +180,9 @@ def create_stock_group(request):
         # Calculate group metrics
         group_metrics = _calculate_group_metrics(stocks_data)
         
-        # Generate group ID
+        # Generate deterministic group ID (not for security)
         import hashlib
-        group_id = hashlib.md5(f"{name}_{','.join(sorted(symbols))}".encode()).hexdigest()[:12]
+        group_id = hashlib.sha256(f"{name}_{','.join(sorted(symbols))}".encode()).hexdigest()[:12]
         
         # Store in cache for 1 hour
         group_data = {

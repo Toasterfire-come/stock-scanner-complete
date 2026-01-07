@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Calendar } from "../../components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover";
+import { QRCodeCanvas } from "qrcode.react";
 import {
   Plus,
   Trash2,
@@ -31,6 +32,10 @@ import {
   Clock,
   FileText,
   PieChart,
+  Share2,
+  Twitter,
+  Copy,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -39,6 +44,24 @@ import SEO from "../../components/SEO";
 import { JournalAnalytics } from "../../components/JournalAnalytics";
 import { TaxReportExporter, DataExporter } from "../../components/ExportUtils";
 import logger from '../../lib/logger';
+import { trackEvent as trackAnalyticsEvent, matomoTrackEvent } from "../../lib/analytics";
+
+// Lazy-load heavy export deps to reduce initial bundle size.
+let __htmlToImagePromise;
+let __html2canvasPromise;
+let __jspdfPromise;
+function loadHtmlToImage() {
+  if (!__htmlToImagePromise) __htmlToImagePromise = import("html-to-image");
+  return __htmlToImagePromise;
+}
+function loadHtml2Canvas() {
+  if (!__html2canvasPromise) __html2canvasPromise = import("html2canvas");
+  return __html2canvasPromise;
+}
+function loadJsPDF() {
+  if (!__jspdfPromise) __jspdfPromise = import("jspdf");
+  return __jspdfPromise;
+}
 
 // Trading Journal - Phase 9 Retention Feature
 export default function TradingJournal() {
@@ -49,6 +72,12 @@ export default function TradingJournal() {
   const [saving, setSaving] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [shareMonth, setShareMonth] = useState(() => new Date().getMonth()); // 0-11
+  const [shareYear, setShareYear] = useState(() => new Date().getFullYear());
+  const [shareExporting, setShareExporting] = useState(false);
+  const [sharePdfExporting, setSharePdfExporting] = useState(false);
+
+  const shareCardRef = useRef(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -119,15 +148,35 @@ export default function TradingJournal() {
         pnlPercent = ((exit - entry) / entry) * 100 * multiplier;
       }
 
-      const entryData = {
-        id: editingEntry?.id || Date.now().toString(),
+      const payload = {
         ...formData,
         date: formData.date.toISOString(),
         symbol: formData.symbol.toUpperCase(),
+        // Ensure numeric values are sent as numbers/null for DRF
+        entry_price: formData.entry_price === "" ? null : Number(formData.entry_price),
+        exit_price: formData.exit_price === "" ? null : Number(formData.exit_price),
+        shares: formData.shares === "" ? null : Number(formData.shares),
         pnl,
         pnl_percent: pnlPercent,
-        updated_at: new Date().toISOString(),
       };
+
+      // Prefer backend persistence; fallback to localStorage if API fails.
+      let entryData = null;
+      try {
+        if (editingEntry?.id) {
+          const resp = await api.put(`/journal/${encodeURIComponent(editingEntry.id)}/`, payload);
+          if (resp.data?.success) entryData = resp.data.data;
+        } else {
+          const resp = await api.post("/journal/", payload);
+          if (resp.data?.success) entryData = resp.data.data;
+        }
+      } catch {
+        entryData = {
+          id: editingEntry?.id || Date.now().toString(),
+          ...payload,
+          updated_at: new Date().toISOString(),
+        };
+      }
 
       let updatedEntries;
       if (editingEntry) {
@@ -149,8 +198,11 @@ export default function TradingJournal() {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!confirm("Delete this journal entry?")) return;
+    try {
+      await api.delete(`/journal/${encodeURIComponent(id)}/`).catch(() => {});
+    } catch {}
     const updatedEntries = entries.filter((e) => e.id !== id);
     setEntries(updatedEntries);
     saveToStorage(updatedEntries);
@@ -201,9 +253,124 @@ export default function TradingJournal() {
     losses: entries.filter((e) => e.status === "loss").length,
     open: entries.filter((e) => e.status === "open").length,
     totalPnl: entries.reduce((sum, e) => sum + (e.pnl || 0), 0),
-    winRate: entries.length > 0
+    winRate: entries.filter((e) => e.status !== "open").length > 0
       ? (entries.filter((e) => e.status === "win").length / entries.filter((e) => e.status !== "open").length) * 100
       : 0,
+  };
+
+  const monthEntries = useMemo(() => {
+    const start = new Date(shareYear, shareMonth, 1);
+    const end = new Date(shareYear, shareMonth + 1, 0, 23, 59, 59, 999);
+    return entries.filter((e) => {
+      const d = new Date(e.date);
+      return d >= start && d <= end && e.status !== "open";
+    });
+  }, [entries, shareMonth, shareYear]);
+
+  const monthSummary = useMemo(() => {
+    const totalTrades = monthEntries.length;
+    const wins = monthEntries.filter((e) => e.status === "win").length;
+    const losses = monthEntries.filter((e) => e.status === "loss").length;
+    const breakeven = monthEntries.filter((e) => e.status === "breakeven").length;
+    const totalPnl = monthEntries.reduce((sum, e) => sum + (Number(e.pnl) || 0), 0);
+    const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
+    const best = monthEntries.reduce((bestTrade, e) => {
+      if (!bestTrade) return e;
+      return (Number(e.pnl) || 0) > (Number(bestTrade.pnl) || 0) ? e : bestTrade;
+    }, null);
+    return { totalTrades, wins, losses, breakeven, totalPnl, winRate, best };
+  }, [monthEntries]);
+
+  const monthLabel = useMemo(() => {
+    const d = new Date(shareYear, shareMonth, 1);
+    return format(d, "MMMM yyyy");
+  }, [shareMonth, shareYear]);
+
+  const buildShareText = () => {
+    const emoji = monthSummary.totalPnl >= 0 ? "📈" : "📉";
+    const pnlText = `${monthSummary.totalPnl >= 0 ? "+" : ""}$${monthSummary.totalPnl.toFixed(2)}`;
+    return `My ${monthLabel} trading recap on @TradeScanPro ${emoji}
+
+P&L: ${pnlText}
+Trades: ${monthSummary.totalTrades}
+Win rate: ${monthSummary.winRate.toFixed(0)}%
+
+Track your trades 👉 ${window.location.origin}`;
+  };
+
+  const copyMonthlyShareText = async () => {
+    try {
+      await navigator.clipboard.writeText(buildShareText());
+      toast.success("Monthly share text copied!");
+      trackAnalyticsEvent("journal_share_text_copied", { month: shareMonth + 1, year: shareYear });
+      matomoTrackEvent("Journal", "Share", "copy_text", 1);
+    } catch {
+      toast.error("Failed to copy share text");
+    }
+  };
+
+  const shareMonthlyToTwitter = () => {
+    const text = buildShareText();
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank", "width=550,height=420");
+    trackAnalyticsEvent("journal_shared", { platform: "twitter", month: shareMonth + 1, year: shareYear });
+    matomoTrackEvent("Journal", "Share", "twitter", 1);
+  };
+
+  const exportMonthlyPNG = async () => {
+    if (!shareCardRef.current) return;
+    if (monthSummary.totalTrades === 0) {
+      toast.error("No closed trades in this month to share");
+      return;
+    }
+    setShareExporting(true);
+    try {
+      const htmlToImage = await loadHtmlToImage();
+      const dataUrl = await htmlToImage.toPng(shareCardRef.current, {
+        quality: 0.98,
+        pixelRatio: 2,
+        backgroundColor: "#ffffff",
+        width: 1200,
+        height: 628,
+        style: { width: "1200px", height: "628px" },
+      });
+      const link = document.createElement("a");
+      link.download = `journal-${shareYear}-${String(shareMonth + 1).padStart(2, "0")}-tradescanpro.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Monthly image exported!");
+      trackAnalyticsEvent("journal_image_exported", { month: shareMonth + 1, year: shareYear });
+      matomoTrackEvent("Journal", "Export", "png", 1);
+    } catch (e) {
+      toast.error("Failed to export image");
+    } finally {
+      setShareExporting(false);
+    }
+  };
+
+  const exportMonthlyPDF = async () => {
+    if (!shareCardRef.current) return;
+    if (monthSummary.totalTrades === 0) {
+      toast.error("No closed trades in this month to export");
+      return;
+    }
+    setSharePdfExporting(true);
+    try {
+      const html2canvasMod = await loadHtml2Canvas();
+      const html2canvas = html2canvasMod?.default || html2canvasMod;
+      const { jsPDF } = await loadJsPDF();
+      const canvas = await html2canvas(shareCardRef.current, { backgroundColor: "#ffffff", scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png", 1.0);
+      const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1200, 628], compress: true });
+      pdf.addImage(imgData, "PNG", 0, 0, 1200, 628, undefined, "FAST");
+      pdf.save(`journal-${shareYear}-${String(shareMonth + 1).padStart(2, "0")}-tradescanpro.pdf`);
+      toast.success("Monthly PDF exported!");
+      trackAnalyticsEvent("journal_pdf_exported", { month: shareMonth + 1, year: shareYear });
+      matomoTrackEvent("Journal", "Export", "pdf", 1);
+    } catch {
+      toast.error("Failed to export PDF");
+    } finally {
+      setSharePdfExporting(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -276,9 +443,157 @@ export default function TradingJournal() {
       </div>
 
       {/* Export Actions */}
-      <div className="flex items-center gap-3 justify-end">
+      <div className="flex items-center gap-3 justify-end flex-wrap">
         <TaxReportExporter entries={entries} />
         <DataExporter data={entries} filename="trading_journal" title="Export All" />
+      </div>
+
+      {/* Monthly sharing */}
+      <div className="mt-4">
+        {/* Offscreen share card (Twitter size) */}
+        <div className="fixed left-[-10000px] top-0" aria-hidden="true">
+          <div
+            ref={shareCardRef}
+            style={{ width: 1200, height: 628 }}
+            className="bg-white border border-gray-200 overflow-hidden"
+          >
+            <div className="h-full w-full flex flex-col">
+              <div className="px-10 pt-8 pb-6 bg-gradient-to-r from-emerald-600 to-blue-600 text-white">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-sm font-semibold opacity-90">TradeScanPro</div>
+                    <div className="text-4xl font-bold mt-1">Monthly Trading Recap</div>
+                    <div className="text-lg opacity-90 mt-2">{monthLabel}</div>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 shadow-sm">
+                    <QRCodeCanvas value={window.location.origin} size={120} includeMargin />
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 px-10 py-8">
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="rounded-xl border border-gray-200 p-4">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">P&L</div>
+                    <div className={`text-3xl font-bold mt-2 ${monthSummary.totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {monthSummary.totalPnl >= 0 ? "+" : ""}${monthSummary.totalPnl.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 p-4">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Trades</div>
+                    <div className="text-3xl font-bold mt-2 text-gray-900">{monthSummary.totalTrades}</div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 p-4">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Win rate</div>
+                    <div className="text-3xl font-bold mt-2 text-gray-900">{monthSummary.winRate.toFixed(0)}%</div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 p-4">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Best trade</div>
+                    <div className="text-xl font-bold mt-2 text-gray-900">
+                      {monthSummary.best?.symbol || "—"}
+                    </div>
+                    <div className={`text-sm font-semibold ${Number(monthSummary.best?.pnl || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {Number(monthSummary.best?.pnl || 0) >= 0 ? "+" : ""}${Number(monthSummary.best?.pnl || 0).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 rounded-xl bg-gray-50 border border-gray-200 p-5">
+                  <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Breakdown</div>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div className="rounded-lg border bg-white p-3">
+                      <div className="text-gray-500">Wins</div>
+                      <div className="text-xl font-bold text-green-600">{monthSummary.wins}</div>
+                    </div>
+                    <div className="rounded-lg border bg-white p-3">
+                      <div className="text-gray-500">Losses</div>
+                      <div className="text-xl font-bold text-red-600">{monthSummary.losses}</div>
+                    </div>
+                    <div className="rounded-lg border bg-white p-3">
+                      <div className="text-gray-500">Breakeven</div>
+                      <div className="text-xl font-bold text-gray-900">{monthSummary.breakeven}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="px-10 py-5 border-t border-gray-200 flex items-center justify-between">
+                <div className="text-sm text-gray-600">Journal • Accountability • Growth</div>
+                <div className="text-sm font-semibold text-gray-900">TradeScanPro.com</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50/50 to-emerald-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5 text-blue-600" />
+              Share Monthly Performance
+            </CardTitle>
+            <CardDescription>
+              Export a shareable recap card or post a summary.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Select value={String(shareMonth)} onValueChange={(v) => setShareMonth(Number(v))}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <SelectItem key={i} value={String(i)}>
+                        {format(new Date(2020, i, 1), "MMMM")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={String(shareYear)} onValueChange={(v) => setShareYear(Number(v))}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 5 }).map((_, idx) => {
+                      const y = new Date().getFullYear() - idx;
+                      return <SelectItem key={y} value={String(y)}>{y}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-wrap gap-2 md:ml-auto">
+                <Button variant="outline" onClick={shareMonthlyToTwitter} disabled={monthSummary.totalTrades === 0}>
+                  <Twitter className="h-4 w-4 mr-2 text-blue-500" />
+                  Share
+                </Button>
+                <Button variant="outline" onClick={copyMonthlyShareText}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy text
+                </Button>
+                <Button variant="outline" onClick={exportMonthlyPNG} disabled={shareExporting}>
+                  {shareExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+                  PNG
+                </Button>
+                <Button variant="outline" onClick={exportMonthlyPDF} disabled={sharePdfExporting}>
+                  {sharePdfExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                  PDF
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-lg border border-dashed border-gray-200">
+              <p className="text-xs text-gray-600 mb-2 font-semibold uppercase tracking-wide">Preview</p>
+              <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-gray-50 p-3 rounded border">
+                {buildShareText()}
+              </pre>
+              {monthSummary.totalTrades === 0 && (
+                <div className="text-xs text-gray-500 mt-2">
+                  No closed trades found for this month.
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

@@ -53,7 +53,7 @@ const CourseCatalog = () => {
         url += '?' + params.join('&');
       }
 
-      const response = await api.get(url);
+      const response = await api.get(url.replace('/api/education/', '/education/'));
       setCourses(response.data || []);
     } catch (error) {
       logger.error('Error fetching courses:', error);

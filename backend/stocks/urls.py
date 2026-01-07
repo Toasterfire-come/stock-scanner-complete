@@ -67,9 +67,14 @@ from . import education_api
 from . import social_trading_api
 from . import retention_api
 from . import system_api
+# Weekly challenges (viral engagement)
+from . import challenges_api
 # NEW MVP Feature APIs
 from . import ai_chat_api
 from . import enhanced_screener_api
+from . import trade_journal_api
+from . import exports_manager_api
+from . import favorites_api
 from . import fast_chart_api
 from . import valuation_display_api
 from . import grouping_api
@@ -194,7 +199,9 @@ urlpatterns = [
     path('export/portfolio/csv', export_portfolio_csv_view, name='export_portfolio_csv'),
     path('export/watchlist/csv', export_watchlist_csv_view, name='export_watchlist_csv'),
     # Reports download stub
-    path('reports/<str:report_id>/download', reports_download_view, name='reports_download'),
+    # Custom reports + downloads (backed by Export Manager)
+    path('reports/custom/', exports_manager_api.create_custom_report, name='reports_custom'),
+    path('reports/<uuid:report_id>/download', exports_manager_api.download_report, name='reports_download'),
 
     # Shareable Watchlists & Portfolios
     path('share/watchlists/<str:slug>/', share_watchlist_public_view, name='share_watchlist_public'),
@@ -205,6 +212,8 @@ urlpatterns = [
     path('share/portfolios/<str:slug>/copy', share_portfolio_copy_view, name='share_portfolio_copy'),
     path('share/watchlists/<str:watchlist_id>/create', share_watchlist_create_link_view, name='share_watchlist_create_link'),
     path('share/portfolios/<str:portfolio_id>/create', share_portfolio_create_link_view, name='share_portfolio_create_link'),
+    path('share/portfolios/<str:portfolio_id>/revoke', _lazy_api('share_portfolio_revoke_link'), name='share_portfolio_revoke_link'),
+    path('share/watchlists/<str:watchlist_id>/revoke', _lazy_api('share_watchlist_revoke_link'), name='share_watchlist_revoke_link'),
     path('realtime/<str:ticker>/', realtime_stock_view, name='realtime_stock'),
     path('trending/', trending_stocks_view, name='trending_stocks'),
     path('market-stats/', market_stats_view, name='market_stats'),
@@ -273,7 +282,7 @@ urlpatterns = [
     # Custom Indicators CRUD
     path('indicators/', indicators_api.list_indicators, name='indicators_list'),
     path('indicators/create/', indicators_api.create_indicator, name='indicators_create'),
-    path('indicators/<str:indicator_id>/', indicators_api.get_indicator, name='indicators_get'),
+    path('indicators/<str:indicator_id>/', indicators_api.indicator_detail_api, name='indicators_detail'),
     path('indicators/<str:indicator_id>/update/', indicators_api.update_indicator, name='indicators_update'),
     path('indicators/<str:indicator_id>/delete/', indicators_api.delete_indicator, name='indicators_delete'),
 
@@ -318,10 +327,17 @@ urlpatterns = [
     path('backtesting/create/', backtesting_api.create_backtest, name='create_backtest'),
     path('backtesting/<int:backtest_id>/run/', backtesting_api.run_backtest, name='run_backtest'),
     path('backtesting/<int:backtest_id>/', backtesting_api.get_backtest, name='get_backtest'),
+    path('backtesting/<int:backtest_id>/fork/', backtesting_api.fork_backtest, name='fork_backtest'),
     path('backtesting/public/<int:backtest_id>/', backtesting_api.get_public_backtest, name='get_public_backtest'),
     path('backtesting/list/', backtesting_api.list_backtests, name='list_backtests'),
     path('backtesting/baseline-strategies/', backtesting_api.list_baseline_strategies, name='baseline_strategies'),
     path('backtesting/limits/', backtesting_api.get_backtest_limits, name='backtest_limits'),
+
+    # Backtest public sharing (Phase 8)
+    path('share/backtests/<int:backtest_id>/create', backtesting_api.create_backtest_share_link, name='share_backtest_create_link'),
+    path('share/backtests/<int:backtest_id>/revoke', backtesting_api.revoke_backtest_share_link, name='share_backtest_revoke_link'),
+    path('share/backtests/<str:slug>/', backtesting_api.get_shared_backtest, name='share_backtest_public'),
+    path('share/backtests/<str:slug>/fork', backtesting_api.fork_shared_backtest, name='share_backtest_fork'),
     
     # Achievement endpoints (Gamification)
     path('achievements/', achievements_api.get_achievements, name='get_achievements'),
@@ -357,6 +373,25 @@ urlpatterns = [
     path('education/indicators/<str:indicator_name>/', education_api.get_indicator_explanation, name='indicator_explanation'),
     path('education/walkthroughs/active/', education_api.get_active_walkthroughs, name='active_walkthroughs'),
     path('education/walkthroughs/<int:walkthrough_id>/start/', education_api.start_walkthrough, name='start_walkthrough'),
+
+    # Weekly challenges (Phase: Viral Engagement)
+    path('challenges/current/', challenges_api.get_current_challenge, name='current_challenge'),
+    path('challenges/leaderboard/', challenges_api.get_challenge_leaderboard, name='challenge_leaderboard'),
+
+    # Trade Journal (trade log) endpoints used by the frontend Trading Journal page
+    path('journal/', trade_journal_api.journal_list_create, name='trade_journal_list_create'),
+    path('journal/<uuid:entry_id>/', trade_journal_api.journal_detail, name='trade_journal_detail'),
+
+    # Export Manager (history + schedules)
+    path('exports/history/', exports_manager_api.export_history, name='export_history'),
+    path('exports/schedules/', exports_manager_api.schedules_list_create, name='export_schedules_list_create'),
+    path('exports/schedules/<int:schedule_id>/', exports_manager_api.schedules_detail, name='export_schedules_detail'),
+    path('exports/schedules/<int:schedule_id>/run-now/', exports_manager_api.schedules_run_now, name='export_schedules_run_now'),
+
+    # Favorites (cross-device sync)
+    path('favorites/', favorites_api.favorites_list_create, name='favorites_list_create'),
+    path('favorites/all/', favorites_api.favorites_clear, name='favorites_clear'),
+    path('favorites/<str:ticker>/', favorites_api.favorites_remove, name='favorites_remove'),
     path('education/walkthroughs/<int:walkthrough_id>/update/', education_api.update_walkthrough_step, name='update_walkthrough_step'),
     path('education/walkthroughs/<int:walkthrough_id>/dismiss/', education_api.dismiss_walkthrough, name='dismiss_walkthrough'),
     path('education/kb/search/', education_api.search_knowledge_base, name='search_knowledge_base'),
@@ -614,8 +649,9 @@ urlpatterns = [
     path('features/<str:flag_name>/toggle/', system_api.toggle_feature_flag, name='toggle_feature_flag'),
 
     # System Health
-    path('health/', system_api.health_check, name='health_check'),
-    path('health/history/', system_api.get_health_history, name='health_history'),
+    # Note: /api/health/* is reserved for lightweight infra probes (views_health).
+    path('system/health/', system_api.health_check, name='system_health_check'),
+    path('system/health/history/', system_api.get_health_history, name='system_health_history'),
     path('system/info/', system_api.get_system_info, name='system_info'),
     path('system/verify/', system_api.verify_setup, name='verify_setup'),
 ]

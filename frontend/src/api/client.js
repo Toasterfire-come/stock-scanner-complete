@@ -528,6 +528,16 @@ export async function createShareLinkForPortfolio(id) {
   const { data } = await api.post(`/share/portfolios/${encodeURIComponent(id)}/create`);
   return data;
 }
+
+export async function revokeShareLinkForPortfolio(id) {
+  const { data } = await api.post(`/share/portfolios/${encodeURIComponent(id)}/revoke`);
+  return data;
+}
+
+export async function revokeShareLinkForWatchlist(id) {
+  const { data } = await api.post(`/share/watchlists/${encodeURIComponent(id)}/revoke`);
+  return data;
+}
 export async function filterStocks(params = {}) { 
   ensureApiQuotaAndIncrement('runScreener');
   const { data } = await api.get('/filter/', { params }); 
@@ -1309,7 +1319,7 @@ export async function listJournalEntries(params = {}) {
 }
 
 export async function createJournalEntry(entryData) {
-  const { data } = await api.post('/journal/create/', entryData);
+  const { data } = await api.post('/journal/', entryData);
   return data;
 }
 
@@ -1330,6 +1340,39 @@ export async function deleteJournalEntry(entryId) {
 
 export async function getJournalStats(params = {}) {
   const { data } = await api.get('/journal/stats/', { params });
+  return data;
+}
+
+// ====================
+// EXPORT MANAGER (history + schedules)
+// ====================
+export async function listExportHistory() {
+  const { data } = await api.get('/exports/history/');
+  return data;
+}
+
+export async function listExportSchedules() {
+  const { data } = await api.get('/exports/schedules/');
+  return data;
+}
+
+export async function createExportSchedule(payload) {
+  const { data } = await api.post('/exports/schedules/', payload);
+  return data;
+}
+
+export async function updateExportSchedule(id, payload) {
+  const { data } = await api.put(`/exports/schedules/${encodeURIComponent(id)}/`, payload);
+  return data;
+}
+
+export async function deleteExportSchedule(id) {
+  const { data } = await api.delete(`/exports/schedules/${encodeURIComponent(id)}/`);
+  return data;
+}
+
+export async function runExportScheduleNow(id) {
+  const { data } = await api.post(`/exports/schedules/${encodeURIComponent(id)}/run-now/`);
   return data;
 }
 
@@ -1364,6 +1407,21 @@ export async function shareBacktest(backtestId) {
 
 export async function getSharedBacktest(slug) {
   const { data } = await api.get(`/share/backtests/${encodeURIComponent(slug)}/`);
+  return data;
+}
+
+export async function revokeSharedBacktest(backtestId) {
+  const { data } = await api.post(`/share/backtests/${backtestId}/revoke`);
+  return data;
+}
+
+export async function forkSharedBacktest(slug) {
+  const { data } = await api.post(`/share/backtests/${encodeURIComponent(slug)}/fork`);
+  return data;
+}
+
+export async function forkBacktest(backtestId) {
+  const { data } = await api.post(`/backtesting/${backtestId}/fork/`);
   return data;
 }
 

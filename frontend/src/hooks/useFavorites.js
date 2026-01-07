@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import logger from '../lib/logger';
+import { api } from '../api/client';
+import { useAuth } from '../context/SecureAuthContext';
 
 /**
  * useFavorites Hook
@@ -12,6 +14,7 @@ import logger from '../lib/logger';
 const STORAGE_KEY = 'tradescanpro_favorites';
 
 export function useFavorites() {
+  const { isAuthenticated } = useAuth();
   const [favorites, setFavorites] = useState(() => {
     // Load from localStorage on init
     try {
@@ -39,18 +42,23 @@ export function useFavorites() {
     try {
       setIsLoading(true);
 
-      // TODO: Integrate with your backend API
-      // const response = await api.get('/api/favorites/');
-      // if (response.data.favorites) {
-      //   setFavorites(response.data.favorites);
-      // }
+      if (!isAuthenticated) return;
+      const { data } = await api.get('/favorites/');
+      if (data?.success && Array.isArray(data.favorites)) {
+        setFavorites(data.favorites);
+      }
 
       setIsLoading(false);
     } catch (error) {
       logger.error('Failed to sync favorites:', error);
       setIsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
+
+  // Initial sync when authenticated
+  useEffect(() => {
+    if (isAuthenticated) syncWithBackend();
+  }, [isAuthenticated, syncWithBackend]);
 
   const addFavorite = useCallback((ticker) => {
     setFavorites(prev => {
@@ -59,25 +67,27 @@ export function useFavorites() {
       }
       const updated = [...prev, ticker];
 
-      // TODO: Sync with backend
-      // api.post('/api/favorites/', { ticker });
+      if (isAuthenticated) {
+        api.post('/favorites/', { ticker }).catch(() => {});
+      }
 
       toast.success(`${ticker} added to favorites`);
       return updated;
     });
-  }, []);
+  }, [isAuthenticated]);
 
   const removeFavorite = useCallback((ticker) => {
     setFavorites(prev => {
       const updated = prev.filter(t => t !== ticker);
 
-      // TODO: Sync with backend
-      // api.delete(`/api/favorites/${ticker}/`);
+      if (isAuthenticated) {
+        api.delete(`/favorites/${encodeURIComponent(ticker)}/`).catch(() => {});
+      }
 
       toast.success(`${ticker} removed from favorites`);
       return updated;
     });
-  }, []);
+  }, [isAuthenticated]);
 
   const toggleFavorite = useCallback((ticker) => {
     setFavorites(prev => {
@@ -86,12 +96,13 @@ export function useFavorites() {
         ? prev.filter(t => t !== ticker)
         : [...prev, ticker];
 
-      // TODO: Sync with backend
-      // if (isFavorite) {
-      //   api.delete(`/api/favorites/${ticker}/`);
-      // } else {
-      //   api.post('/api/favorites/', { ticker });
-      // }
+      if (isAuthenticated) {
+        if (isFavorite) {
+          api.delete(`/favorites/${encodeURIComponent(ticker)}/`).catch(() => {});
+        } else {
+          api.post('/favorites/', { ticker }).catch(() => {});
+        }
+      }
 
       toast.success(isFavorite
         ? `${ticker} removed from favorites`
@@ -100,7 +111,7 @@ export function useFavorites() {
 
       return updated;
     });
-  }, []);
+  }, [isAuthenticated]);
 
   const isFavorite = useCallback((ticker) => {
     return favorites.includes(ticker);
@@ -109,11 +120,12 @@ export function useFavorites() {
   const clearFavorites = useCallback(() => {
     setFavorites([]);
 
-    // TODO: Sync with backend
-    // api.delete('/api/favorites/all/');
+    if (isAuthenticated) {
+      api.delete('/favorites/all/').catch(() => {});
+    }
 
     toast.success('All favorites cleared');
-  }, []);
+  }, [isAuthenticated]);
 
   return {
     favorites,

@@ -13,6 +13,8 @@ import yfinance as yf
 from django.conf import settings
 from ..models import BacktestRun, BaselineStrategy
 import re
+import signal
+from .stooq_data import StooqSourceConfig, fetch_stooq_from_combined_csv, fetch_stooq_remote_daily
 
 
 class BacktestingService:
@@ -295,6 +297,15 @@ def exit_condition(data, index, entry_price, entry_index):
             # For simplicity, use first symbol only
             # In production, you'd implement multi-symbol logic
             symbol = symbols[0] if isinstance(symbols, list) else symbols
+
+            provider = (os.environ.get("BACKTEST_DATA_PROVIDER") or "yfinance").strip().lower()
+            if provider == "stooq":
+                cfg = StooqSourceConfig.from_env()
+                interval = os.environ.get("BACKTEST_DATA_INTERVAL")  # optional, e.g. "60" or "5"
+                df = fetch_stooq_from_combined_csv(symbol, start_date, end_date, cfg=cfg, interval=interval)
+                if df.empty:
+                    df = fetch_stooq_remote_daily(symbol, start_date, end_date, cfg=cfg)
+                return df
             
             ticker = yf.Ticker(symbol)
             df = ticker.history(start=start_date, end=end_date)
@@ -321,15 +332,54 @@ def exit_condition(data, index, entry_price, entry_index):
             Dictionary with backtest metrics
         """
         try:
-            # Create execution namespace
-            namespace = {
-                'pd': pd,
-                'np': np,
-                'data': data,
+            # NOTE: This executes dynamically-generated code. Treat as high-risk.
+            # We restrict builtins and perform a basic denylist check, but this is
+            # not a complete sandbox. For production, run this in an isolated worker.
+            # The code generator (and LLMs) often include `import` statements, but we don't
+            # expose `__import__` in builtins. Strip imports to keep the execution surface
+            # small and deterministic (pd/np are injected via the namespace below).
+            code = "\n".join(
+                line for line in code.splitlines()
+                if not re.match(r"^\s*(import|from)\s+", line)
+            )
+
+            forbidden = ("open(", "exec(", "eval(", "__", "os.", "sys.", "subprocess", "socket", "pathlib")
+            if any(tok in code for tok in forbidden):
+                return {"error": "Generated strategy code contains forbidden operations"}
+
+            safe_builtins = {
+                "abs": abs,
+                "min": min,
+                "max": max,
+                "sum": sum,
+                "len": len,
+                "range": range,
+                "round": round,
             }
-            
-            # Execute the generated code to define functions
-            exec(code, namespace)
+
+            # Create execution namespace (restricted)
+            namespace = {
+                "__builtins__": safe_builtins,
+                "pd": pd,
+                "np": np,
+                "data": data,
+            }
+
+            def _with_timeout(seconds: float, fn):
+                # Unix-only safety valve to prevent infinite execution.
+                def _handler(signum, frame):  # noqa: ARG001
+                    raise TimeoutError("Timed out")
+
+                prev = signal.signal(signal.SIGALRM, _handler)
+                signal.setitimer(signal.ITIMER_REAL, seconds)
+                try:
+                    return fn()
+                finally:
+                    signal.setitimer(signal.ITIMER_REAL, 0)
+                    signal.signal(signal.SIGALRM, prev)
+
+            # Execute the generated code to define functions (bounded time)
+            _with_timeout(0.5, lambda: exec(code, namespace))
             
             # Get entry and exit functions
             entry_condition = namespace.get('entry_condition')
@@ -348,7 +398,8 @@ def exit_condition(data, index, entry_price, entry_index):
                 if position is None:
                     # Check for entry
                     try:
-                        if entry_condition(data, i):
+                        ok = _with_timeout(0.05, lambda: bool(entry_condition(data, i)))
+                        if ok:
                             entry_price = data.iloc[i]['Close']
                             shares = cash / entry_price
                             position = {
@@ -364,11 +415,16 @@ def exit_condition(data, index, entry_price, entry_index):
                     # Check for exit
                     try:
                         current_price = data.iloc[i]['Close']
-                        if exit_condition(data, i, position['entry_price'], position['entry_index']):
+                        ok = _with_timeout(
+                            0.05,
+                            lambda: bool(exit_condition(data, i, position['entry_price'], position['entry_index'])),
+                        )
+                        if ok:
                             exit_price = current_price
                             cash = position['shares'] * exit_price
                             
                             trade_return = ((exit_price - position['entry_price']) / position['entry_price']) * 100
+                            trade_profit = (exit_price - position['entry_price']) * position['shares']
                             
                             trades.append({
                                 'entry_date': str(position['entry_date']),
@@ -377,7 +433,8 @@ def exit_condition(data, index, entry_price, entry_index):
                                 'exit_price': float(exit_price),
                                 'shares': float(position['shares']),
                                 'return_pct': float(trade_return),
-                                'profit': float(cash - initial_capital)
+                                # Profit should be per-trade P&L, not cumulative vs initial capital.
+                                'profit': float(trade_profit)
                             })
                             
                             position = None
@@ -396,6 +453,7 @@ def exit_condition(data, index, entry_price, entry_index):
                 final_price = data.iloc[-1]['Close']
                 cash = position['shares'] * final_price
                 trade_return = ((final_price - position['entry_price']) / position['entry_price']) * 100
+                trade_profit = (final_price - position['entry_price']) * position['shares']
                 trades.append({
                     'entry_date': str(position['entry_date']),
                     'exit_date': str(data.iloc[-1]['Date']),
@@ -403,7 +461,8 @@ def exit_condition(data, index, entry_price, entry_index):
                     'exit_price': float(final_price),
                     'shares': float(position['shares']),
                     'return_pct': float(trade_return),
-                    'profit': float(cash - initial_capital)
+                    # Profit should be per-trade P&L, not cumulative vs initial capital.
+                    'profit': float(trade_profit)
                 })
             
             # Calculate metrics

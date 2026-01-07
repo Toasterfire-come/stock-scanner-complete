@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import AccessibleButton from './AccessibleButton';
 
 /**
@@ -8,8 +9,12 @@ import AccessibleButton from './AccessibleButton';
  */
 const CookieConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
+    // Never show in embeds (iframe widgets should be clean/minimal)
+    if (location?.pathname?.startsWith('/embed/')) return;
+
     // Check if user has already consented
     const hasConsented = localStorage.getItem('cookie_consent');
     if (!hasConsented) {
@@ -19,7 +24,7 @@ const CookieConsent = () => {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [location?.pathname]);
 
   const handleAccept = () => {
     localStorage.setItem('cookie_consent', 'accepted');
@@ -56,7 +61,7 @@ const CookieConsent = () => {
               We use cookies to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept All", you consent to our use of cookies. You can manage your preferences in your account settings.
               {' '}
               <a
-                href="/privacy-policy"
+                href="/legal/privacy"
                 className="text-blue-600 hover:text-blue-800 underline font-medium"
                 target="_blank"
                 rel="noopener noreferrer"

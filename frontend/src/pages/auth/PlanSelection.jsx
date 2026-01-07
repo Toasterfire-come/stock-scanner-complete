@@ -4,8 +4,18 @@ import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { Check, Crown, Zap, ArrowRight } from "lucide-react";
+import { Check, Crown, Zap, ArrowRight, Gift } from "lucide-react";
 import logger from '../../lib/logger';
+
+function parseMoney(v) {
+  const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function computeAnnual(monthly) {
+  // Conservative fallback if annualPrice isn't provided: 12 months.
+  return Number(monthly) * 12;
+}
 
 const plans = [
   {
@@ -188,8 +198,8 @@ export default function PlanSelection() {
                     </div>
                     <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                       {(() => {
-                        const monthly = parseFloat(String(plan.price).replace('$',''));
-                        const annual = computeAnnual(monthly);
+                        const monthly = parseMoney(plan.price);
+                        const annual = plan.annualPrice ? parseMoney(plan.annualPrice) : computeAnnual(monthly);
                         const display = isAnnual ? `$${annual.toFixed(2)}` : plan.price;
                         return (
                           <>

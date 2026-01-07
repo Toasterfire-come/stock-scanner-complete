@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Alert, AlertDescription } from "../../components/ui/alert";
+import { QRCodeCanvas } from "qrcode.react";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -23,7 +24,11 @@ import {
   ArrowDownRight,
   Clock,
   History,
-  Zap
+  Zap,
+  Share2,
+  Twitter,
+  Copy,
+  Download
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -45,6 +50,14 @@ import {
 } from "recharts";
 import SEO from "../../components/SEO";
 import logger from '../../lib/logger';
+import { trackEvent as trackAnalyticsEvent, matomoTrackEvent } from "../../lib/analytics";
+
+// Lazy-load heavy export deps to reduce initial bundle size.
+let __htmlToImagePromise;
+function loadHtmlToImage() {
+  if (!__htmlToImagePromise) __htmlToImagePromise = import("html-to-image");
+  return __htmlToImagePromise;
+}
 
 // Metric Card Component
 const MetricCard = ({ title, value, subtitle, icon: Icon, trend, color = "blue" }) => {
@@ -190,6 +203,9 @@ export default function ValueHunter() {
   const [isLoading, setIsLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [topStocksLoading, setTopStocksLoading] = useState(false);
+  const [shareExporting, setShareExporting] = useState(false);
+
+  const shareCardRef = useRef(null);
 
   // Load current week on mount
   useEffect(() => {
@@ -257,6 +273,65 @@ export default function ValueHunter() {
 
   const displayWeek = selectedWeek || currentWeek;
 
+  const shareText = useMemo(() => {
+    const weekLabel = displayWeek ? `Week ${displayWeek.week_number}, ${displayWeek.year}` : "this week";
+    const picks = (topStocks || []).slice(0, 5).map((s) => s.symbol).filter(Boolean).join(", ");
+    return `My Value Hunter picks for ${weekLabel} on @TradeScanPro 🏆
+
+Top picks: ${picks || "loading..."}
+Try it 👉 ${window.location.origin}`;
+  }, [displayWeek, topStocks]);
+
+  const copyShareText = async () => {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      toast.success("Share text copied!");
+      trackAnalyticsEvent("value_hunter_share_text_copied", { week: displayWeek?.week_number, year: displayWeek?.year });
+      matomoTrackEvent("ValueHunter", "Share", "copy_text", 1);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
+  const shareToTwitter = () => {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, "_blank", "width=550,height=420");
+    trackAnalyticsEvent("value_hunter_shared", { platform: "twitter", week: displayWeek?.week_number, year: displayWeek?.year });
+    matomoTrackEvent("ValueHunter", "Share", "twitter", 1);
+  };
+
+  const exportWeeklyPicksPNG = async () => {
+    if (!shareCardRef.current) return;
+    if (!topStocks || topStocks.length === 0) {
+      toast.error("No picks to export yet");
+      return;
+    }
+    setShareExporting(true);
+    try {
+      const htmlToImage = await loadHtmlToImage();
+      const dataUrl = await htmlToImage.toPng(shareCardRef.current, {
+        quality: 0.98,
+        pixelRatio: 2,
+        backgroundColor: "#ffffff",
+        width: 1200,
+        height: 628,
+        style: { width: "1200px", height: "628px" },
+      });
+      const link = document.createElement("a");
+      const y = displayWeek?.year || new Date().getFullYear();
+      const w = displayWeek?.week_number || "current";
+      link.download = `value-hunter-picks-${y}-w${w}.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Image exported!");
+      trackAnalyticsEvent("value_hunter_image_exported", { week: displayWeek?.week_number, year: displayWeek?.year });
+      matomoTrackEvent("ValueHunter", "Export", "png", 1);
+    } catch {
+      toast.error("Failed to export image");
+    } finally {
+      setShareExporting(false);
+    }
+  };
+
   // Prepare performance chart data
   const performanceData = weekHistory.slice(0, 10).reverse().map((week) => ({
     week: `W${week.week_number}`,
@@ -292,6 +367,73 @@ export default function ValueHunter() {
             <Calendar className="h-3 w-3 mr-1 text-blue-600" />
             Monday Entry / Friday Exit
           </Badge>
+        </div>
+
+        {/* Offscreen share card */}
+        <div className="fixed left-[-10000px] top-0" aria-hidden="true">
+          <div ref={shareCardRef} style={{ width: 1200, height: 628 }} className="bg-white border border-gray-200 overflow-hidden">
+            <div className="h-full w-full flex flex-col">
+              <div className="px-10 pt-8 pb-6 bg-gradient-to-r from-green-600 to-blue-600 text-white">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-sm font-semibold opacity-90">TradeScanPro</div>
+                    <div className="text-4xl font-bold mt-1">Value Hunter Picks</div>
+                    <div className="text-lg opacity-90 mt-2">
+                      {displayWeek ? `Week ${displayWeek.week_number}, ${displayWeek.year}` : "This week"}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 shadow-sm">
+                    <QRCodeCanvas value={`${window.location.origin}/app/value-hunter`} size={120} includeMargin />
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 px-10 py-8">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-gray-200 p-4">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Top 10 tickers</div>
+                    <div className="mt-3 grid grid-cols-5 gap-2">
+                      {(topStocks || []).slice(0, 10).map((s, i) => (
+                        <div key={`${s.symbol}-${i}`} className="rounded-lg border bg-gray-50 p-2 text-center">
+                          <div className="text-xs text-gray-500">#{i + 1}</div>
+                          <div className="text-sm font-bold text-gray-900">{s.symbol}</div>
+                          <div className="text-[10px] text-blue-600">Score {Number(s.valuation_score || 0).toFixed(0)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 p-4">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Why these picks</div>
+                    <div className="mt-3 text-sm text-gray-700">
+                      Screened for undervaluation and quality signals. Always validate with your own risk management.
+                    </div>
+                    <div className="mt-6 rounded-lg bg-gray-50 border border-gray-200 p-3 text-xs text-gray-600 whitespace-pre-line font-mono">
+                      {shareText}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="px-10 py-5 border-t border-gray-200 flex items-center justify-between">
+                <div className="text-sm text-gray-600">Weekly picks • Track record • Alpha</div>
+                <div className="text-sm font-semibold text-gray-900">TradeScanPro.com</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sharing actions */}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={shareToTwitter}>
+            <Twitter className="h-4 w-4 mr-2 text-blue-500" />
+            Share
+          </Button>
+          <Button variant="outline" onClick={copyShareText}>
+            <Copy className="h-4 w-4 mr-2" />
+            Copy text
+          </Button>
+          <Button variant="outline" onClick={exportWeeklyPicksPNG} disabled={shareExporting}>
+            {shareExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+            Export PNG
+          </Button>
         </div>
       </div>
 

@@ -82,6 +82,25 @@ def get_indicator(request, indicator_id: str):
 
 
 @csrf_exempt
+@require_http_methods(["GET", "PUT", "PATCH", "DELETE"])
+@login_required
+def indicator_detail_api(request, indicator_id: str):
+    """
+    Compatibility endpoint for frontend which calls:
+    - GET    /api/indicators/<id>/
+    - PUT    /api/indicators/<id>/
+    - DELETE /api/indicators/<id>/
+    """
+    if request.method == "GET":
+        return get_indicator(request, indicator_id)
+    if request.method in ("PUT", "PATCH"):
+        return update_indicator(request, indicator_id)
+    if request.method == "DELETE":
+        return delete_indicator(request, indicator_id)
+    return JsonResponse({ "success": False, "error": "Method not allowed" }, status=405)
+
+
+@csrf_exempt
 @require_http_methods(["PUT","PATCH"])
 @login_required
 def update_indicator(request, indicator_id: str):

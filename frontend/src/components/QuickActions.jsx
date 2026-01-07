@@ -12,12 +12,15 @@ import { Plus, Menu, Zap, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/SecureAuthContext";
 
-const QuickActions = ({ className = "", variant = "floating" }) => {
+const QuickActions = ({ className = "", variant = "floating", onStartTour }) => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
   const actions = [
+    ...(typeof onStartTour === "function"
+      ? [{ name: "Start Tour", onClick: () => onStartTour(), requiresAuth: false }]
+      : []),
     { name: "Create Screener", href: "/app/screeners/new", requiresAuth: true },
     { name: "Add to Watchlist", href: "/app/watchlists", requiresAuth: true },
     { name: "Set Price Alert", href: "/app/alerts", requiresAuth: true },
@@ -26,7 +29,11 @@ const QuickActions = ({ className = "", variant = "floating" }) => {
   ];
 
   const available = actions.filter(a => (isAuthenticated || !a.requiresAuth));
-  const handleGo = (href) => { setIsOpen(false); navigate(href); };
+  const handleGo = (action) => {
+    setIsOpen(false);
+    if (typeof action.onClick === "function") return action.onClick();
+    if (action.href) navigate(action.href);
+  };
 
   // Single hamburger menu for all variants
   return (
@@ -35,6 +42,7 @@ const QuickActions = ({ className = "", variant = "floating" }) => {
         <DropdownMenuTrigger asChild>
           <Button
             size={variant === 'floating' ? 'lg' : 'sm'}
+            data-testid="quick-actions-button"
             className={`${variant === 'floating' ? 'h-14 w-14 rounded-full shadow-lg' : 'h-9 px-3'} bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0`}
           >
             {variant === 'floating' ? <Plus className="h-6 w-6" /> : <Menu className="h-4 w-4" />}
@@ -47,7 +55,7 @@ const QuickActions = ({ className = "", variant = "floating" }) => {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {available.map((a) => (
-            <DropdownMenuItem key={a.name} className="p-3 cursor-pointer rounded-lg" onClick={() => handleGo(a.href)}>
+            <DropdownMenuItem key={a.name} className="p-3 cursor-pointer rounded-lg" onClick={() => handleGo(a)}>
               {a.name}
             </DropdownMenuItem>
           ))}

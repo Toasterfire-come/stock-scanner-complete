@@ -12,6 +12,8 @@ from typing import Dict, List, Optional, Tuple
 import yfinance as yf
 from django.conf import settings
 import re
+import signal
+from .stooq_data import StooqSourceConfig, fetch_stooq_from_combined_csv, fetch_stooq_remote_daily
 
 # Groq integration
 try:
@@ -527,6 +529,17 @@ def exit_condition(data, index, entry_price, entry_index):
             symbol = symbols[0] if isinstance(symbols, list) else symbols
             print(f"Fetching historical data for {symbol} from {start_date} to {end_date}")
 
+            provider = (os.environ.get("BACKTEST_DATA_PROVIDER") or "yfinance").strip().lower()
+            if provider == "stooq":
+                cfg = StooqSourceConfig.from_env()
+                interval = os.environ.get("BACKTEST_DATA_INTERVAL")  # optional, e.g. "60" or "5"
+                df = fetch_stooq_from_combined_csv(symbol, start_date, end_date, cfg=cfg, interval=interval)
+                if df.empty:
+                    df = fetch_stooq_remote_daily(symbol, start_date, end_date, cfg=cfg)
+                if not df.empty:
+                    print(f"Successfully fetched {len(df)} rows of data for {symbol} (stooq)")
+                return df
+
             ticker = yf.Ticker(symbol)
             df = ticker.history(start=start_date, end=end_date, auto_adjust=True, actions=False)
 
@@ -576,8 +589,43 @@ def exit_condition(data, index, entry_price, entry_index):
     def _execute_strategy(self, code: str, data: pd.DataFrame, initial_capital: float) -> Dict:
         """Execute the trading strategy"""
         try:
-            namespace = {'pd': pd, 'np': np, 'data': data}
-            exec(code, namespace)
+            # NOTE: This executes dynamically-generated code. Treat as high-risk.
+            # We restrict builtins and perform a basic denylist check, but this is
+            # not a complete sandbox. For production, run this in an isolated worker.
+            # Strip import statements (we do not expose __import__; pd/np are injected).
+            code = "\n".join(
+                line for line in code.splitlines()
+                if not re.match(r"^\s*(import|from)\s+", line)
+            )
+
+            forbidden = ("open(", "exec(", "eval(", "__", "os.", "sys.", "subprocess", "socket", "pathlib")
+            if any(tok in code for tok in forbidden):
+                return {"error": "Generated strategy code contains forbidden operations"}
+
+            safe_builtins = {
+                "abs": abs,
+                "min": min,
+                "max": max,
+                "sum": sum,
+                "len": len,
+                "range": range,
+                "round": round,
+            }
+
+            def _with_timeout(seconds: float, fn):
+                def _handler(signum, frame):  # noqa: ARG001
+                    raise TimeoutError("Timed out")
+
+                prev = signal.signal(signal.SIGALRM, _handler)
+                signal.setitimer(signal.ITIMER_REAL, seconds)
+                try:
+                    return fn()
+                finally:
+                    signal.setitimer(signal.ITIMER_REAL, 0)
+                    signal.signal(signal.SIGALRM, prev)
+
+            namespace = {"__builtins__": safe_builtins, "pd": pd, "np": np, "data": data}
+            _with_timeout(0.5, lambda: exec(code, namespace))
             
             entry_condition = namespace.get('entry_condition')
             exit_condition = namespace.get('exit_condition')
@@ -593,7 +641,8 @@ def exit_condition(data, index, entry_price, entry_index):
             for i in range(len(data)):
                 if position is None:
                     try:
-                        if entry_condition(data, i):
+                        ok = _with_timeout(0.05, lambda: bool(entry_condition(data, i)))
+                        if ok:
                             entry_price = data.iloc[i]['Close']
                             shares = cash / entry_price
                             position = {
@@ -608,9 +657,14 @@ def exit_condition(data, index, entry_price, entry_index):
                 else:
                     try:
                         current_price = data.iloc[i]['Close']
-                        if exit_condition(data, i, position['entry_price'], position['entry_index']):
+                        ok = _with_timeout(
+                            0.05,
+                            lambda: bool(exit_condition(data, i, position['entry_price'], position['entry_index'])),
+                        )
+                        if ok:
                             cash = position['shares'] * current_price
                             trade_return = ((current_price - position['entry_price']) / position['entry_price']) * 100
+                            trade_profit = (current_price - position['entry_price']) * position['shares']
                             
                             trades.append({
                                 'entry_date': str(position['entry_date']),
@@ -619,7 +673,8 @@ def exit_condition(data, index, entry_price, entry_index):
                                 'exit_price': float(current_price),
                                 'shares': float(position['shares']),
                                 'return_pct': float(trade_return),
-                                'profit': float(cash - initial_capital)
+                                # Profit should be per-trade P&L, not cumulative vs initial capital.
+                                'profit': float(trade_profit)
                             })
                             position = None
                     except:
@@ -635,6 +690,7 @@ def exit_condition(data, index, entry_price, entry_index):
                 final_price = data.iloc[-1]['Close']
                 cash = position['shares'] * final_price
                 trade_return = ((final_price - position['entry_price']) / position['entry_price']) * 100
+                trade_profit = (final_price - position['entry_price']) * position['shares']
                 trades.append({
                     'entry_date': str(position['entry_date']),
                     'exit_date': str(data.iloc[-1]['Date']),
@@ -642,7 +698,8 @@ def exit_condition(data, index, entry_price, entry_index):
                     'exit_price': float(final_price),
                     'shares': float(position['shares']),
                     'return_pct': float(trade_return),
-                    'profit': float(cash - initial_capital)
+                    # Profit should be per-trade P&L, not cumulative vs initial capital.
+                    'profit': float(trade_profit)
                 })
             
             metrics = self._calculate_metrics(trades, equity_curve, initial_capital)
@@ -656,54 +713,171 @@ def exit_condition(data, index, entry_price, entry_index):
     
     def _calculate_metrics(self, trades: List[Dict], equity_curve: List[float], 
                           initial_capital: float) -> Dict:
-        """Calculate performance metrics"""
+        """Calculate comprehensive backtest performance metrics (same shape as static service)."""
         if not trades:
             return {
-                'total_return': 0, 'annualized_return': 0, 'sharpe_ratio': 0,
-                'max_drawdown': 0, 'win_rate': 0, 'profit_factor': 0,
-                'total_trades': 0, 'winning_trades': 0, 'losing_trades': 0,
-                'composite_score': 0
+                'total_return': 0,
+                'annualized_return': 0,
+                'sharpe_ratio': 0,
+                'sortino_ratio': 0,
+                'calmar_ratio': 0,
+                'omega_ratio': 0,
+                'max_drawdown': 0,
+                'win_rate': 0,
+                'profit_factor': 0,
+                'total_trades': 0,
+                'winning_trades': 0,
+                'losing_trades': 0,
+                'avg_win': 0,
+                'avg_loss': 0,
+                'expectancy': 0,
+                'kelly_criterion': 0,
+                'max_consecutive_wins': 0,
+                'max_consecutive_losses': 0,
+                'recovery_factor': 0,
+                'ulcer_index': 0,
+                'var_95': 0,
+                'cvar_95': 0,
+                't_statistic': 0,
+                'p_value': 1.0,
+                'composite_score': 0,
+                'quality_grade': 'F'
             }
-        
+
         final_capital = equity_curve[-1]
         total_return = ((final_capital - initial_capital) / initial_capital) * 100
-        
+
         days = len(equity_curve)
         years = days / 252
         annualized_return = (((final_capital / initial_capital) ** (1 / years)) - 1) * 100 if years > 0 else total_return
-        
+
         returns = pd.Series(equity_curve).pct_change().dropna()
+
         sharpe_ratio = (returns.mean() / returns.std()) * np.sqrt(252) if returns.std() > 0 else 0
-        
+
+        # Sortino Ratio
+        downside_returns = returns[returns < 0]
+        downside_std = downside_returns.std() if len(downside_returns) > 0 else 0
+        sortino_ratio = (returns.mean() / downside_std) * np.sqrt(252) if downside_std > 0 else 0
+
+        # Max drawdown
         peak = np.maximum.accumulate(equity_curve)
-        drawdown = (equity_curve - peak) / peak
+        drawdown = (np.array(equity_curve) - peak) / peak
         max_drawdown = np.min(drawdown) * 100
-        
+
+        # Calmar Ratio
+        calmar_ratio = annualized_return / abs(max_drawdown) if max_drawdown < 0 else 0
+
+        # Omega Ratio
+        threshold = 0
+        gains = returns[returns > threshold].sum()
+        losses = abs(returns[returns < threshold].sum())
+        omega_ratio = gains / losses if losses > 0 else 0
+
+        # Recovery Factor
+        net_profit = final_capital - initial_capital
+        recovery_factor = net_profit / abs(max_drawdown * initial_capital / 100) if max_drawdown < 0 else 0
+
+        # Ulcer Index
+        drawdown_squared = drawdown ** 2
+        ulcer_index = np.sqrt(np.mean(drawdown_squared)) * 100
+
+        # VaR / CVaR
+        var_95 = np.percentile(returns, 5) * 100
+        var_threshold = np.percentile(returns, 5)
+        cvar_returns = returns[returns <= var_threshold]
+        cvar_95 = np.mean(cvar_returns) * 100 if len(cvar_returns) > 0 else 0
+
         winning_trades = [t for t in trades if t['return_pct'] > 0]
         losing_trades = [t for t in trades if t['return_pct'] <= 0]
         win_rate = (len(winning_trades) / len(trades)) * 100
-        
+
+        avg_win = np.mean([t['return_pct'] for t in winning_trades]) if winning_trades else 0
+        avg_loss = np.mean([t['return_pct'] for t in losing_trades]) if losing_trades else 0
+
         gross_profit = sum(t['profit'] for t in winning_trades)
         gross_loss = abs(sum(t['profit'] for t in losing_trades))
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0
-        
-        score = (
-            min(max(total_return, 0), 100) * 0.30 +
-            min(max(sharpe_ratio * 20, 0), 100) * 0.25 +
-            min(win_rate, 100) * 0.20 +
-            min(max(100 + max_drawdown, 0), 100) * 0.15 +
-            min(max(profit_factor * 10, 0), 100) * 0.10
-        )
-        
+
+        win_prob = len(winning_trades) / len(trades) if trades else 0
+        loss_prob = 1 - win_prob
+        expectancy = (win_prob * avg_win) + (loss_prob * avg_loss)
+
+        win_loss_ratio = abs(avg_win / avg_loss) if avg_loss != 0 else 0
+        kelly_criterion = (win_prob - (loss_prob / win_loss_ratio)) * 100 if win_loss_ratio > 0 else 0
+        kelly_criterion = max(min(kelly_criterion, 100), 0)
+
+        consecutive_wins = 0
+        consecutive_losses = 0
+        max_consecutive_wins = 0
+        max_consecutive_losses = 0
+        for trade in trades:
+            if trade['return_pct'] > 0:
+                consecutive_wins += 1
+                consecutive_losses = 0
+                max_consecutive_wins = max(max_consecutive_wins, consecutive_wins)
+            else:
+                consecutive_losses += 1
+                consecutive_wins = 0
+                max_consecutive_losses = max(max_consecutive_losses, consecutive_losses)
+
+        # Statistical significance
+        from scipy import stats
+        if len(returns) > 1:
+            t_statistic, p_value = stats.ttest_1samp(returns, 0)
+        else:
+            t_statistic = 0
+            p_value = 1.0
+
+        score_components = {
+            'returns': min(max(annualized_return / 30 * 20, 0), 20),
+            'sharpe': min(max(sharpe_ratio / 2 * 15, 0), 15),
+            'sortino': min(max(sortino_ratio / 2 * 10, 0), 10),
+            'win_rate': (win_rate / 100) * 15,
+            'drawdown': max(20 + (max_drawdown / 5), 0),
+            'consistency': min(max(expectancy * 2, 0), 10),
+            'trade_count': min(len(trades) / 50 * 10, 10),
+        }
+        composite_score = sum(score_components.values())
+
+        if composite_score >= 90:
+            quality_grade = 'A+'
+        elif composite_score >= 80:
+            quality_grade = 'A'
+        elif composite_score >= 70:
+            quality_grade = 'B'
+        elif composite_score >= 60:
+            quality_grade = 'C'
+        elif composite_score >= 50:
+            quality_grade = 'D'
+        else:
+            quality_grade = 'F'
+
         return {
             'total_return': round(total_return, 2),
             'annualized_return': round(annualized_return, 2),
             'sharpe_ratio': round(sharpe_ratio, 4),
+            'sortino_ratio': round(sortino_ratio, 4),
+            'calmar_ratio': round(calmar_ratio, 4),
+            'omega_ratio': round(omega_ratio, 4),
             'max_drawdown': round(max_drawdown, 2),
+            'recovery_factor': round(recovery_factor, 2),
+            'ulcer_index': round(ulcer_index, 2),
+            'var_95': round(var_95, 2),
+            'cvar_95': round(cvar_95, 2),
             'win_rate': round(win_rate, 2),
             'profit_factor': round(profit_factor, 4),
             'total_trades': len(trades),
             'winning_trades': len(winning_trades),
             'losing_trades': len(losing_trades),
-            'composite_score': round(score, 2)
+            'avg_win': round(avg_win, 2),
+            'avg_loss': round(avg_loss, 2),
+            'expectancy': round(expectancy, 2),
+            'kelly_criterion': round(kelly_criterion, 2),
+            'max_consecutive_wins': max_consecutive_wins,
+            'max_consecutive_losses': max_consecutive_losses,
+            't_statistic': round(float(t_statistic), 4),
+            'p_value': round(float(p_value), 4),
+            'composite_score': round(composite_score, 2),
+            'quality_grade': quality_grade,
         }

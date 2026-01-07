@@ -22,10 +22,14 @@ if USE_XAMPP and IS_XAMPP_AVAILABLE:
     if XAMPP_MYSQL_PATH not in os.environ.get('PATH', ''):
         os.environ['PATH'] = os.environ.get('PATH', '') + os.pathsep + XAMPP_MYSQL_PATH
 
-SECRET_KEY = os.environ.get('SECRET_KEY') or os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-development-key')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or os.environ.get('SECRET_KEY') or 'django-insecure-development-key'
 _debug_raw = os.environ.get('DEBUG', os.environ.get('DJANGO_DEBUG', 'True'))
 DEBUG = str(_debug_raw).lower() == 'true'
 print(f"DEBUG MODE: {DEBUG} (raw value: {_debug_raw})")
+
+# Fail closed if someone tries to run non-debug without a real secret key.
+if not DEBUG and (not SECRET_KEY or SECRET_KEY.startswith("django-insecure-") or SECRET_KEY == "django-insecure-development-key"):
+    raise RuntimeError("DJANGO_SECRET_KEY (or SECRET_KEY) must be set when DEBUG is false.")
 
 # Disable SSL redirect in DEBUG mode for local development
 if DEBUG:

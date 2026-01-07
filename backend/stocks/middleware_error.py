@@ -37,7 +37,11 @@ class EnhancedErrorHandlingMiddleware:
             
             # Log response status
             if response.status_code >= 400:
-                logger.warning(f"Request {request.request_id} returned {response.status_code}")
+                # Avoid noisy logs for expected auth failures in tests/CI.
+                if response.status_code in (401, 403) and getattr(settings, "SUPPRESS_AUTH_STATUS_LOGS", False):
+                    pass
+                else:
+                    logger.warning(f"Request {request.request_id} returned {response.status_code}")
             
             return response
             

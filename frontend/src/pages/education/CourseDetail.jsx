@@ -23,7 +23,7 @@ const CourseDetail = () => {
 
   const fetchCourse = async () => {
     try {
-      const response = await api.get(`/api/education/courses/${courseSlug}/`);
+      const response = await api.get(`/education/courses/${courseSlug}/`);
       setCourse(response.data);
       setLoading(false);
     } catch (error) {
@@ -35,7 +35,7 @@ const CourseDetail = () => {
   const handleEnroll = async () => {
     setEnrolling(true);
     try {
-      const response = await api.post(`/api/education/courses/${courseSlug}/enroll/`);
+      const response = await api.post(`/education/courses/${courseSlug}/enroll/`);
       if (response.data.first_lesson_slug) {
         navigate(`/learn/lesson/${response.data.first_lesson_slug}`);
       }

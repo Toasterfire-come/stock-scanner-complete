@@ -37,15 +37,15 @@ const InfoTooltip = ({ term, children }) => {
         setTermData(term);
         
         // Track tooltip hover
-        await api.post(`/api/education/glossary/${term.slug}/track-tooltip/`);
+        await api.post(`/education/glossary/${term.slug}/track-tooltip/`);
       } else {
         // If term is a string, fetch it
         const slug = term.toLowerCase().replace(/\s+/g, '-');
-        const response = await api.get(`/api/education/glossary/${slug}/`);
+        const response = await api.get(`/education/glossary/${slug}/`);
         setTermData(response.data);
         
         // Track tooltip hover
-        await api.post(`/api/education/glossary/${slug}/track-tooltip/`);
+        await api.post(`/education/glossary/${slug}/track-tooltip/`);
       }
     } catch (error) {
       logger.error('Error fetching term:', error);
