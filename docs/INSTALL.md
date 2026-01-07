@@ -115,3 +115,29 @@ DJANGO_SETTINGS_MODULE=stockscanner_django.settings_ci ./venv/bin/python manage.
 The backtesting engine executes AI-generated strategy code. It includes basic restrictions and timeouts, but **it is not a true sandbox**.
 For production deployments, run strategy execution in an **isolated worker/container** with strict resource limits.
 
+## Backtester market data providers (yfinance vs Stooq)
+
+By default, backtests fetch market data via **yfinance**.
+
+You can switch to **Stooq** (and/or local Stooq files) using environment variables on the backend:
+
+```bash
+# Default:
+BACKTEST_DATA_PROVIDER=yfinance
+
+# Use Stooq instead:
+BACKTEST_DATA_PROVIDER=stooq
+
+# Optional: point to a combined CSV produced by scripts/stooq_combine.py
+STOOQ_COMBINED_CSV=/absolute/path/to/stooq_combined.csv
+
+# Optional: filter interval when using a combined CSV (e.g. 60=hourly, 5=5-min)
+BACKTEST_DATA_INTERVAL=60
+```
+
+To generate `STOOQ_COMBINED_CSV`, use:
+
+```bash
+python3 scripts/stooq_combine.py --input /path/to/h_us_txt.zip --output /path/to/stooq_hourly_combined.csv --interval 60 --sqlite
+```
+

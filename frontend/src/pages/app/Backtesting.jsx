@@ -284,6 +284,7 @@ export default function Backtesting() {
   // Share helper functions
   const getShareUrl = (backtest) => {
     const origin = window.location.origin;
+    if (!backtest) return `${origin}/app/backtesting`;
     // Prefer stable slug URL when available
     if (backtest?.share_slug) return `${origin}/backtest/${backtest.share_slug}`;
     return `${origin}/share/backtest/${backtest.id}`;
@@ -546,7 +547,11 @@ Learn from my mistakes 👉 ${shareUrl}`;
   const getEmbedCode = () => {
     const origin = window.location.origin;
     const slug = currentBacktest?.share_slug;
-    const src = slug ? `${origin}/embed/backtest/${encodeURIComponent(slug)}` : getShareUrl(currentBacktest);
+    const src = slug
+      ? `${origin}/embed/backtest/${encodeURIComponent(slug)}`
+      : currentBacktest
+        ? getShareUrl(currentBacktest)
+        : `${origin}/app/backtesting`;
     return `<iframe src="${src}" width="600" height="420" style="border:0;border-radius:12px;overflow:hidden" loading="lazy" title="TradeScanPro Backtest"></iframe>`;
   };
 

@@ -66,7 +66,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             is_premium = premium.lower() == 'true'
             queryset = queryset.filter(is_premium=is_premium)
         
-        return queryset.annotate(lesson_count=Count('lessons'))
+        # Ensure deterministic ordering for pagination.
+        return queryset.annotate(lesson_count=Count('lessons')).order_by('order', 'title')
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_courses(self, request):

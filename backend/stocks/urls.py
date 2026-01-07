@@ -649,8 +649,9 @@ urlpatterns = [
     path('features/<str:flag_name>/toggle/', system_api.toggle_feature_flag, name='toggle_feature_flag'),
 
     # System Health
-    path('health/', system_api.health_check, name='health_check'),
-    path('health/history/', system_api.get_health_history, name='health_history'),
+    # Note: /api/health/* is reserved for lightweight infra probes (views_health).
+    path('system/health/', system_api.health_check, name='system_health_check'),
+    path('system/health/history/', system_api.get_health_history, name='system_health_history'),
     path('system/info/', system_api.get_system_info, name='system_info'),
     path('system/verify/', system_api.verify_setup, name='verify_setup'),
 ]
