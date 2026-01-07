@@ -18,9 +18,10 @@ import sys
 import django
 import asyncio
 import time
+import json
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Set
+from typing import Dict, Optional
 from zoneinfo import ZoneInfo
 import yfinance as yf
 
@@ -39,6 +40,18 @@ class OneMinuteScanner:
     def __init__(self):
         self.websocket_updates = {}  # Store WebSocket price updates
         self.est_tz = ZoneInfo("America/New_York")
+        # IMPORTANT:
+        # Yahoo/yfinance streaming is event-driven (no guaranteed per-ticker snapshot),
+        # and large universes can hit provider subscription/capacity limits.
+        # To avoid "only 50-60 tickers updated" when subscribing to thousands,
+        # we rotate through chunks each minute (configurable via env vars).
+        self.ws_timeout_seconds = int(os.getenv("YF_WS_TIMEOUT_SECONDS", "60"))
+        self.rotate_universe = os.getenv("YF_WS_ROTATE_UNIVERSE", "1").lower() in ("1", "true", "yes")
+        self.rotation_chunk_size = int(os.getenv("YF_WS_ROTATION_CHUNK_SIZE", "750"))
+        self.rotation_state_path = Path(os.getenv(
+            "YF_WS_ROTATION_STATE_PATH",
+            str(Path(__file__).with_suffix(".rotation_state.json"))
+        ))
 
     def is_market_hours(self):
         """Check if current time is within market hours (9:30 AM - 4:00 PM EST, weekdays)"""
@@ -78,6 +91,57 @@ class OneMinuteScanner:
                 'volume': volume,  # Properly extracted from day_volume
                 'timestamp': datetime.now()
             }
+
+    def _load_rotation_offset(self) -> int:
+        """Load last rotation offset from disk (best-effort)."""
+        try:
+            if not self.rotation_state_path.exists():
+                return 0
+            payload = json.loads(self.rotation_state_path.read_text())
+            offset = int(payload.get("offset", 0))
+            return max(0, offset)
+        except Exception:
+            # If state is corrupt/unreadable, start from 0.
+            return 0
+
+    def _save_rotation_offset(self, offset: int) -> None:
+        """Persist rotation offset to disk (best-effort)."""
+        try:
+            self.rotation_state_path.write_text(json.dumps({"offset": int(offset)}, indent=2))
+        except Exception:
+            # Non-fatal: rotation state persistence is only an optimization.
+            pass
+
+    def select_tickers_for_cycle(self, all_tickers: list[str]) -> tuple[list[str], Optional[dict]]:
+        """
+        Select a subset of tickers for this 60s websocket listen window.
+
+        Rationale:
+        - Streaming is event-driven; you will *not* reliably get an update for every subscribed ticker.
+        - Many providers/yfinance implementations effectively cap large subscriptions.
+        - Rotating a chunk each minute ensures broad coverage over time.
+        """
+        total = len(all_tickers)
+        if total == 0:
+            return [], None
+
+        # If rotation disabled or universe is small, subscribe to all.
+        if (not self.rotate_universe) or total <= self.rotation_chunk_size:
+            return all_tickers, {"mode": "all", "total": total, "chunk_size": total, "offset": 0}
+
+        offset = self._load_rotation_offset() % total
+        end = offset + self.rotation_chunk_size
+
+        if end <= total:
+            chunk = all_tickers[offset:end]
+        else:
+            # Wraparound
+            chunk = all_tickers[offset:] + all_tickers[: (end % total)]
+
+        next_offset = (offset + len(chunk)) % total
+        self._save_rotation_offset(next_offset)
+
+        return chunk, {"mode": "rotating", "total": total, "chunk_size": len(chunk), "offset": offset, "next_offset": next_offset}
 
     async def fetch_realtime_prices_websocket(self, tickers, timeout=60):
         """Fetch real-time prices via WebSocket"""
@@ -143,31 +207,55 @@ class OneMinuteScanner:
 
         # Get all tickers
         tickers = await self.get_all_tickers()
-        print(f"[INFO] Found {len(tickers)} tickers in database\n")
+        print(f"[INFO] Found {len(tickers)} tickers in database")
+
+        # Choose what we actually subscribe to this minute (chunk rotation)
+        tickers_for_ws, rotation_meta = self.select_tickers_for_cycle(tickers)
+        if rotation_meta:
+            if rotation_meta.get("mode") == "rotating":
+                print(
+                    f"[INFO] WebSocket universe rotation enabled: "
+                    f"subscribing to {rotation_meta['chunk_size']}/{rotation_meta['total']} "
+                    f"(offset={rotation_meta['offset']}, next_offset={rotation_meta['next_offset']})"
+                )
+            else:
+                print(f"[INFO] WebSocket subscribing to all {rotation_meta['total']} tickers (rotation disabled/not needed)")
+        print("")
 
         # Clear previous updates
         self.websocket_updates = {}
 
-        # Fetch prices via WebSocket (60 second timeout)
-        await self.fetch_realtime_prices_websocket(tickers, timeout=60)
+        # Fetch prices via WebSocket (event-driven; no per-ticker snapshot guarantee)
+        await self.fetch_realtime_prices_websocket(tickers_for_ws, timeout=self.ws_timeout_seconds)
 
         # Update database
         successful, failed = await self.update_database()
 
         # Results
         total_time = time.time() - start_time
-        rate = len(tickers) / total_time if total_time > 0 else 0
-        success_rate = (successful / len(tickers)) * 100 if tickers else 0
+        subscribed_count = len(tickers_for_ws)
+        subscribed_rate = subscribed_count / total_time if total_time > 0 else 0
+        update_rate = successful / total_time if total_time > 0 else 0
+        subscribed_success_rate = (successful / subscribed_count) * 100 if subscribed_count else 0
 
         print(f"\n{'='*80}")
         print("SCAN COMPLETE")
         print(f"{'='*80}")
-        print(f"Total tickers: {len(tickers)}")
+        print(f"Total tickers in DB: {len(tickers)}")
+        print(f"Subscribed this cycle: {subscribed_count}")
         print(f"WebSocket updates: {len(self.websocket_updates)}")
-        print(f"Successfully updated: {successful} ({success_rate:.1f}%)")
+        print(f"Successfully updated: {successful} ({subscribed_success_rate:.1f}% of subscribed)")
         print(f"Failed: {failed}")
         print(f"Total time: {total_time:.1f}s")
-        print(f"Rate: {rate:.1f} tickers/second")
+        print(f"Subscribe rate: {subscribed_rate:.1f} tickers/second")
+        print(f"DB update rate: {update_rate:.1f} stocks/second")
+        if subscribed_count and len(self.websocket_updates) < max(25, int(subscribed_count * 0.10)):
+            print(
+                f"[WARN] Very low streaming update coverage "
+                f"({len(self.websocket_updates)}/{subscribed_count}). "
+                f"This is expected if the provider caps subscriptions or only emits events for a subset. "
+                f"Try smaller chunks (YF_WS_ROTATION_CHUNK_SIZE) and/or longer listen (YF_WS_TIMEOUT_SECONDS)."
+            )
         print(f"Next scan in 60s\n")
 
     async def run_continuous(self):
