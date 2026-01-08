@@ -5,8 +5,8 @@ import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 import { toast } from "sonner";
+import logger from "../lib/logger";
 import {
-import logger from '../lib/logger';
   Building2,
   Users,
   Globe,
@@ -18,6 +18,11 @@ import logger from '../lib/logger';
   Phone,
   Clock
 } from "lucide-react";
+
+const DEFAULT_PROD_BACKEND_URL = "https://api.tradescanpro.com";
+const API_BASE_URL = ((process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === "production" ? DEFAULT_PROD_BACKEND_URL : "")) || "")
+  .trim()
+  .replace(/\/$/, "");
 
 const EnterpriseContact = () => {
   const [formData, setFormData] = useState({
@@ -43,7 +48,7 @@ const EnterpriseContact = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'https://api.retailtradescanner.com'}/api/enterprise/contact/`, {
+      const response = await fetch(`${API_BASE_URL}/api/enterprise/contact/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -3,8 +3,11 @@
  * Handles subscription creation, cancellation, and status management
  */
 
-// Prefer same-origin by default ("/api" is proxied by nginx in Docker, and by setupProxy.js in dev).
-const API_URL = (process.env.REACT_APP_BACKEND_URL || '').trim().replace(/\/$/, '') || '';
+// Prefer same-origin in development; default to production API domain in production builds.
+const DEFAULT_PROD_BACKEND_URL = 'https://api.tradescanpro.com';
+const API_URL = ((process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? DEFAULT_PROD_BACKEND_URL : '')) || '')
+  .trim()
+  .replace(/\/$/, '');
 
 /**
  * Get authentication token from localStorage

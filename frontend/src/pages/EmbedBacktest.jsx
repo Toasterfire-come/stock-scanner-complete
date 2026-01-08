@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Badge } from "../components/ui/badge";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
+const DEFAULT_PROD_BACKEND_URL = "https://api.tradescanpro.com";
+const API_BASE_URL = ((process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === "production" ? DEFAULT_PROD_BACKEND_URL : "")) || "")
+  .replace(/\/$/, "");
 
 export default function EmbedBacktest() {
   const { slug } = useParams();

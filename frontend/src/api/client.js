@@ -3,10 +3,15 @@ import { getCache, setCache } from "../lib/cache";
 import { getReferralFromCookie, normalizeReferralCode } from "../lib/referral";
 import logger from '../lib/logger';
 
-// Prefer a relative API root ("/api") unless an explicit backend URL is provided.
-// - Docker nginx proxies "/api/" to the backend container.
+// Prefer a relative API root ("/api") in development unless an explicit backend URL is provided.
+// In production, default to the deployed API domain.
+//
+// - Docker/nginx can proxy "/api/" to the backend container.
 // - CRA/CRACO dev server proxies "/api" via src/setupProxy.js.
-const RAW_BASE_URL = (process.env.REACT_APP_BACKEND_URL || '').trim().replace(/\/$/, '');
+const DEFAULT_PROD_BACKEND_URL = 'https://api.tradescanpro.com';
+const RAW_BASE_URL = (process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? DEFAULT_PROD_BACKEND_URL : ''))
+  .trim()
+  .replace(/\/$/, '');
 const BASE_URL = RAW_BASE_URL || '';
 
 export const API_ROOT = `${BASE_URL}/api`; // BASE_URL=="" => "/api"

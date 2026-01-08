@@ -63,7 +63,7 @@ const ApiDocumentation = () => {
   const mockDocumentation = {
     title: "Trade Scan Pro API Documentation",
     version: "v1.0",
-    base_url: "https://api.retailtradescanner.com/api",
+    base_url: "https://api.tradescanpro.com/api",
     endpoints: [
       {
         id: 1,
@@ -94,7 +94,7 @@ const ApiDocumentation = () => {
           total_pages: 100
         },
         example: `curl -H "Authorization: Bearer YOUR_API_KEY" \\
-     "https://api.retailtradescanner.com/api/stocks/?limit=10&min_price=50"`
+     "https://api.tradescanpro.com/api/stocks/?limit=10&min_price=50"`
       },
       {
         id: 2,
@@ -120,7 +120,7 @@ const ApiDocumentation = () => {
           }
         },
         example: `curl -H "Authorization: Bearer YOUR_API_KEY" \\
-     "https://api.retailtradescanner.com/api/stocks/AAPL/"`
+     "https://api.tradescanpro.com/api/stocks/AAPL/"`
       },
       {
         id: 3,
@@ -149,7 +149,7 @@ const ApiDocumentation = () => {
           }
         },
         example: `curl -H "Authorization: Bearer YOUR_API_KEY" \\
-     "https://api.retailtradescanner.com/api/portfolio/"`
+     "https://api.tradescanpro.com/api/portfolio/"`
       },
       {
         id: 4,
@@ -170,7 +170,7 @@ const ApiDocumentation = () => {
         example: `curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \\
      -H "Content-Type: application/json" \\
      -d '{"ticker":"AAPL","target_price":160,"condition":"above","email":true}' \\
-     "https://api.retailtradescanner.com/api/alerts/create/"`
+     "https://api.tradescanpro.com/api/alerts/create/"`
       },
       {
         id: 5,
@@ -191,7 +191,7 @@ const ApiDocumentation = () => {
           most_active: []
         },
         example: `curl -H "Authorization: Bearer YOUR_API_KEY" \\
-     "https://api.retailtradescanner.com/api/market-stats/"`
+     "https://api.tradescanpro.com/api/market-stats/"`
       }
     ]
   };
@@ -451,7 +451,7 @@ const ApiDocumentation = () => {
                 <div className="space-y-2 text-sm text-gray-600">
                   <p>All API endpoints are relative to:</p>
                   <div className="bg-gray-50 p-3 rounded font-mono text-xs break-all">
-                    {documentation?.base_url || 'https://api.retailtradescanner.com/api'}
+                    {documentation?.base_url || 'https://api.tradescanpro.com/api'}
                   </div>
                   <p>All responses are in JSON format.</p>
                 </div>

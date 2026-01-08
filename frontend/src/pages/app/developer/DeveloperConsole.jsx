@@ -45,12 +45,34 @@ const DeveloperConsole = () => {
     { path: '/user/profile/', method: 'GET', description: 'User profile' }
   ];
 
+  const getDefaultApiOrigin = () => {
+    const raw = (process.env.REACT_APP_BACKEND_URL || '').trim().replace(/\/$/, '');
+    if (raw) return raw;
+    if (process.env.NODE_ENV === 'production') return 'https://api.tradescanpro.com';
+    return window.location.origin;
+  };
+
+  const toApiPath = (inputUrl) => {
+    try {
+      const u = new URL(inputUrl, window.location.origin);
+      const pathname = u.pathname || '';
+      const apiPrefix = '/api';
+      const pathAfterApi = pathname.startsWith(apiPrefix) ? pathname.slice(apiPrefix.length) : pathname;
+      return `${pathAfterApi || '/'}${u.search || ''}`;
+    } catch {
+      // If it's already a path like "/stocks/" or "/api/stocks/"
+      const s = String(inputUrl || '').trim();
+      if (s.startsWith('/api')) return s.replace(/^\/api/, '') || '/';
+      return s || '/';
+    }
+  };
+
   const handleEndpointChange = (endpointPath) => {
     const endpoint = endpoints.find(e => e.path === endpointPath);
     if (endpoint) {
       setSelectedEndpoint(endpointPath);
       setMethod(endpoint.method);
-      setRequestUrl(`https://api.retailtradescanner.com/api${endpointPath}`);
+      setRequestUrl(`${getDefaultApiOrigin()}/api${endpointPath}`);
       
       // Set example request body for POST endpoints
       if (endpoint.method === 'POST') {
@@ -102,8 +124,8 @@ const DeveloperConsole = () => {
         }
       }
 
-      // Extract the API path from the full URL
-      const apiPath = requestUrl.replace('https://api.retailtradescanner.com/api', '');
+      // Extract the API path from the full URL (supports full URLs or relative paths)
+      const apiPath = toApiPath(requestUrl);
       
       let result;
       if (method === 'GET') {
@@ -281,7 +303,7 @@ const DeveloperConsole = () => {
                     <Input
                       value={requestUrl}
                       onChange={(e) => setRequestUrl(e.target.value)}
-                      placeholder="https://api.retailtradescanner.com/api/..."
+                      placeholder="https://api.tradescanpro.com/api/..."
                     />
                   </div>
                 </div>
