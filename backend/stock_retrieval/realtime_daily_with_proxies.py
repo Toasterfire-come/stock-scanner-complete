@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import threading
 import random
 import math
@@ -31,15 +32,62 @@ from stocks.models import Stock
 
 import yfinance as yf
 
-# Logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
-)
-logger = logging.getLogger("daily_proxies")
+def configure_logging() -> logging.Logger:
+    """
+    Configure logging to BOTH stdout and a file under backend/logs.
 
-# Suppress yfinance noise
-logging.getLogger("yfinance").setLevel(logging.ERROR)
+    Why:
+    - If this script is run directly (not via run_daily_scanner.sh + tee),
+      you still get a durable log file.
+    - Time-based heartbeat logs make it obvious the scanner is working,
+      even at very low target rates.
+    """
+    log_level = os.getenv("DAILY_SCANNER_LOG_LEVEL", "INFO").upper()
+    level = getattr(logging, log_level, logging.INFO)
+
+    backend_dir = Path(__file__).resolve().parents[1]
+    default_log_dir = backend_dir / "logs"
+    log_dir = Path(os.getenv("DAILY_SCANNER_LOG_DIR", str(default_log_dir)))
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    log_file = log_dir / "daily_scanner.log"
+
+    logger = logging.getLogger("daily_proxies")
+    logger.setLevel(level)
+    logger.propagate = False
+
+    fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+
+    # Avoid duplicate handlers if module reloaded
+    if not logger.handlers:
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(fmt)
+        stream_handler.setLevel(level)
+
+        # Rotate daily, keep last 7 days by default
+        backup_count = int(os.getenv("DAILY_SCANNER_LOG_BACKUPS", "7"))
+        file_handler = TimedRotatingFileHandler(
+            filename=str(log_file),
+            when="midnight",
+            interval=1,
+            backupCount=backup_count,
+            encoding="utf-8",
+            utc=False,
+        )
+        file_handler.setFormatter(fmt)
+        file_handler.setLevel(level)
+
+        logger.addHandler(stream_handler)
+        logger.addHandler(file_handler)
+
+    # Ensure yfinance noise is suppressed
+    logging.getLogger("yfinance").setLevel(logging.ERROR)
+
+    logger.info(f"Daily scanner log file: {log_file}")
+    return logger
+
+
+logger = configure_logging()
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -393,6 +441,8 @@ def run_daily_scanner():
     global proxy_list
 
     start_time = time.time()
+    last_progress_log = start_time
+    progress_interval_seconds = int(os.getenv("DAILY_SCANNER_PROGRESS_INTERVAL_SECONDS", "30"))
 
     logger.info("="*80)
     logger.info("DAILY SCANNER - WITH PROXY ROTATION & RATE LIMITING")
@@ -414,6 +464,9 @@ def run_daily_scanner():
     # Estimate time
     estimated_time = len(tickers) / TARGET_RATE
     logger.info(f"Estimated time: {estimated_time/3600:.1f} hours at {TARGET_RATE} t/s")
+    logger.info(
+        f"Note: at this rate, in ~2 minutes you should only expect ~{int(120 * TARGET_RATE)} tickers updated."
+    )
     logger.info("")
 
     # Scan
@@ -445,14 +498,16 @@ def run_daily_scanner():
                 else:
                     failed_count += 1
 
-                # Progress update every 100 tickers
-                if i % 100 == 0:
+                # Progress update: time-based heartbeat (default every 30s) + every 100 completions
+                now = time.time()
+                if (i % 100 == 0) or (now - last_progress_log >= progress_interval_seconds):
                     elapsed = time.time() - start_time
                     rate = i / elapsed if elapsed > 0 else 0
                     remaining = len(tickers) - i
                     eta = remaining / rate if rate > 0 else 0
                     success_rate = (success_count / i) * 100
                     proxy_usage = (proxy_used_count / success_count * 100) if success_count > 0 else 0
+                    last_progress_log = now
 
                     logger.info(
                         f"Progress: {i}/{len(tickers)} ({i/len(tickers)*100:.1f}%) | "
