@@ -7,7 +7,8 @@ import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { toast } from "sonner";
 
-const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
+// Prefer same-origin by default ("/api" is proxied in Docker/nginx and in dev via setupProxy.js)
+const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
 
 export default function AchievementsDisplay() {
   const [achievements, setAchievements] = useState(null);

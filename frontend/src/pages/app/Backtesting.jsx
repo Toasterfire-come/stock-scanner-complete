@@ -604,7 +604,8 @@ Learn from my mistakes 👉 ${shareUrl}`;
   useEffect(() => {
     const load = async () => {
       try {
-        const baseUrl = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
+        // Prefer same-origin by default ("/api" is proxied in Docker/nginx and in dev via setupProxy.js)
+        const baseUrl = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
         const res = await fetch(`${baseUrl}/api/challenges/current/`);
         const data = await res.json();
         if (data?.success) setWeeklyChallenge(data.challenge);

@@ -4,7 +4,8 @@ import { Award, X, Twitter, Linkedin, Share2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 
-const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
+// Prefer same-origin by default ("/api" is proxied in Docker/nginx and in dev via setupProxy.js)
+const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
 
 export default function AchievementUnlock({ achievement, onClose }) {
   const [isSharing, setIsSharing] = useState(false);

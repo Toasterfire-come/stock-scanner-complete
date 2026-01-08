@@ -24,7 +24,8 @@ import { toast } from "sonner";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { forkSharedBacktest } from "../api/client";
 
-const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
+// Prefer same-origin by default ("/api" is proxied in Docker/nginx and in dev via setupProxy.js)
+const API_BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
 
 export default function PublicBacktestShare() {
   const { backtest_id, shareSlug } = useParams();

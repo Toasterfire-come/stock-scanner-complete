@@ -3,14 +3,17 @@ import { getCache, setCache } from "../lib/cache";
 import { getReferralFromCookie, normalizeReferralCode } from "../lib/referral";
 import logger from '../lib/logger';
 
-// Use REACT_APP_BACKEND_URL exclusively from environment, with production fallback
-const BASE_URL = process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com";
+// Prefer a relative API root ("/api") unless an explicit backend URL is provided.
+// - Docker nginx proxies "/api/" to the backend container.
+// - CRA/CRACO dev server proxies "/api" via src/setupProxy.js.
+const RAW_BASE_URL = (process.env.REACT_APP_BACKEND_URL || '').trim().replace(/\/$/, '');
+const BASE_URL = RAW_BASE_URL || '';
 
-if (!BASE_URL) {
-  logger.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
+export const API_ROOT = `${BASE_URL}/api`; // BASE_URL=="" => "/api"
+
+if (!RAW_BASE_URL) {
+  logger.info("REACT_APP_BACKEND_URL not set; using same-origin '/api' (dev proxy/nginx proxy expected).");
 }
-
-export const API_ROOT = `${BASE_URL}/api`;
 
 // Remove secondary axios instance; use one layer with withCredentials for CSRF
 // (deduped per spec)

@@ -13,7 +13,8 @@ import { toast } from "sonner";
 import axios from "axios";
 import logger from '../../../lib/logger';
 
-const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com").replace(/\/$/, "");
+// Prefer same-origin by default ("/api" is proxied in Docker/nginx and in dev via setupProxy.js)
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
 
 const EnhancedCreateScreener = () => {
   const navigate = useNavigate();

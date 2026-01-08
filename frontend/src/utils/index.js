@@ -3,7 +3,8 @@
  * Handles subscription creation, cancellation, and status management
  */
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://api.retailtradescanner.com';
+// Prefer same-origin by default ("/api" is proxied by nginx in Docker, and by setupProxy.js in dev).
+const API_URL = (process.env.REACT_APP_BACKEND_URL || '').trim().replace(/\/$/, '') || '';
 
 /**
  * Get authentication token from localStorage
