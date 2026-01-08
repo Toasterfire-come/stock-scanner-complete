@@ -135,6 +135,28 @@ def _yf_download_smoke(period: str, interval: str, timeout_s: float) -> Tuple[bo
 
     return True, "ok"
 
+def _direct_connectivity_check(period: str, interval: str, timeout_s: float) -> Tuple[bool, str]:
+    """
+    Before testing proxies, ensure yfinance can reach Yahoo *directly*.
+
+    If direct connectivity fails with curl: (60) on Windows, that's almost always
+    a local CA bundle / certificate store issue (not proxy-related). In that case,
+    proxy tests are meaningless and will all fail.
+    """
+    # Ensure no proxy env interferes with the direct test
+    for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
+        os.environ.pop(k, None)
+    try:
+        import yfinance as yf
+        if hasattr(yf, "set_config"):
+            yf.set_config(proxy=None)
+        if hasattr(yf, "config") and hasattr(yf.config, "network"):
+            yf.config.network.proxy = None
+    except Exception:
+        pass
+
+    return _yf_download_smoke(period=period, interval=interval, timeout_s=timeout_s)
+
 
 def _test_one_proxy_in_subprocess(
     proxy: str,
@@ -227,6 +249,17 @@ def main() -> int:
         action="store_true",
         help="Overwrite the input proxy file with only working proxies",
     )
+    parser.add_argument(
+        "--in-place-backup",
+        action="store_true",
+        default=True,
+        help="When using --in-place, create a .bak copy first (default: on)",
+    )
+    parser.add_argument(
+        "--force-in-place",
+        action="store_true",
+        help="Allow --in-place overwrite even if 0 proxies are verified (NOT recommended)",
+    )
     parser.add_argument("--max-workers", type=int, default=30, help="Max parallel subprocesses")
     parser.add_argument("--timeout", type=float, default=8.0, help="yfinance download timeout seconds")
     parser.add_argument("--attempts", type=int, default=1, help="Attempts per method per proxy")
@@ -244,6 +277,29 @@ def main() -> int:
     print(f"[INFO] Loaded {len(proxies)} proxies from {proxy_path}")
     if not proxies:
         print("[ERROR] No proxies to test")
+        return 2
+
+    # Direct connectivity sanity check
+    print("[INFO] Checking direct yfinance connectivity (no proxy)...")
+    ok_direct, msg_direct = _direct_connectivity_check(
+        period=args.period,
+        interval=args.interval,
+        timeout_s=float(args.timeout),
+    )
+    if not ok_direct:
+        print("[ERROR] Direct yfinance download failed; proxy verification aborted.")
+        print(f"[ERROR] Reason: {msg_direct}")
+        print("")
+        print("Most common fix on Windows for `curl: (60) SSL certificate problem`:")
+        print("  - Upgrade cert bundle + curl stack:")
+        print("      python -m pip install --upgrade certifi curl_cffi yfinance")
+        print("  - Ensure CA bundle is discoverable by curl_cffi:")
+        print("      python -c \"import certifi; print(certifi.where())\"")
+        print("    Then set one of these env vars to that path and re-run:")
+        print("      set SSL_CERT_FILE=C:\\\\path\\\\to\\\\cacert.pem")
+        print("      set CURL_CA_BUNDLE=C:\\\\path\\\\to\\\\cacert.pem")
+        print("")
+        print("If direct works but proxies fail with CONNECT 502/503/400, those proxies do not support HTTPS tunneling.")
         return 2
 
     # Multiprocessing spawn for Windows safety
@@ -296,8 +352,18 @@ def main() -> int:
     print(f"[INFO] Wrote {len(oks)} working proxies to {out_path}")
 
     if args.in_place:
-        proxy_path.write_text(out_path.read_text(encoding="utf-8"), encoding="utf-8")
-        print(f"[INFO] Overwrote input proxy file with working-only list: {proxy_path}")
+        if len(oks) == 0 and not args.force_in_place:
+            print("[WARN] 0 proxies verified; refusing to overwrite input file without --force-in-place.")
+        else:
+            if args.in_place_backup:
+                bak = proxy_path.with_suffix(proxy_path.suffix + ".bak")
+                try:
+                    bak.write_text(proxy_path.read_text(encoding="utf-8", errors="ignore"), encoding="utf-8")
+                    print(f"[INFO] Backup written: {bak}")
+                except Exception as e:
+                    print(f"[WARN] Failed to write backup file: {e}")
+            proxy_path.write_text(out_path.read_text(encoding="utf-8"), encoding="utf-8")
+            print(f"[INFO] Overwrote input proxy file with working-only list: {proxy_path}")
 
     # Summary
     print("=" * 80)
