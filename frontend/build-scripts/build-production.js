@@ -6,13 +6,19 @@ const path = require('path');
 
 console.log('🚀 Starting production build...\n');
 
-// Environment validation (non-fatal; CRA will load .env.production for app build)
-const requiredEnvVars = [ 'REACT_APP_BACKEND_URL' ];
-console.log('✅ Validating environment variables...');
-const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-if (missingVars.length > 0) {
-  console.warn('⚠️  Missing optional environment variables:', missingVars, '- falling back to defaults where applicable.');
-}
+// Ensure sane production defaults are baked into the build.
+// CRA/CRACO inlines REACT_APP_* variables at build time; if they are unset, the
+// app bundle can end up pointing at an old/incorrect API.
+const DEFAULT_PROD_BACKEND_URL = 'https://api.tradescanpro.com';
+const DEFAULT_PROD_PUBLIC_URL = 'https://tradescanpro.com';
+
+// If the caller didn't provide env vars, default them for a production build.
+process.env.REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL || DEFAULT_PROD_BACKEND_URL;
+process.env.REACT_APP_PUBLIC_URL = process.env.REACT_APP_PUBLIC_URL || DEFAULT_PROD_PUBLIC_URL;
+
+console.log('✅ Environment defaults:');
+console.log('  - REACT_APP_BACKEND_URL =', process.env.REACT_APP_BACKEND_URL);
+console.log('  - REACT_APP_PUBLIC_URL  =', process.env.REACT_APP_PUBLIC_URL);
 
 // Security checks
 console.log('🔒 Running security checks...');

@@ -8,6 +8,10 @@ console.log('🔍 Running deployment readiness check...\n');
 const checkPassed = [];
 const checkFailed = [];
 
+// Align with production build defaults so deploy checks behave consistently.
+const DEFAULT_PROD_BACKEND_URL = 'https://api.tradescanpro.com';
+process.env.REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL || DEFAULT_PROD_BACKEND_URL;
+
 // Check 1: Build directory exists
 if (fs.existsSync('./build')) {
   checkPassed.push('Build directory exists');
@@ -34,7 +38,6 @@ criticalFiles.forEach(file => {
 
 // Check 3: Environment variables
 const requiredEnvVars = [
-  'REACT_APP_BACKEND_URL',
   'REACT_APP_API_PASSWORD'
 ];
 
