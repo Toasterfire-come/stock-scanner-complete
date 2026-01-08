@@ -3,7 +3,11 @@
  * Handles subscription creation, cancellation, and status management
  */
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://api.retailtradescanner.com';
+// Prefer same-origin in development; default to production API domain in production builds.
+const DEFAULT_PROD_BACKEND_URL = 'https://api.tradescanpro.com';
+const API_URL = ((process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? DEFAULT_PROD_BACKEND_URL : '')) || '')
+  .trim()
+  .replace(/\/$/, '');
 
 /**
  * Get authentication token from localStorage

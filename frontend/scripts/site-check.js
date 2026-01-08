@@ -69,7 +69,7 @@ async function run() {
       response: async (res) => {
         try {
           const url = res.url();
-          if (url.includes('https://api.retailtradescanner.com/api/')) {
+          if (url.includes('https://api.tradescanpro.com/api/')) {
             routeErrors.apiCalls.push({ url, status: res.status() });
           }
         } catch {}

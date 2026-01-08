@@ -3,15 +3,20 @@ import { getCache, setCache } from "../lib/cache";
 import security, { apiRateLimiter, requestQueue, sessionManager, secureStorage, validateSecurityHeaders, sanitizeError } from "../lib/security";
 import logger from '../lib/logger';
 
-// Use REACT_APP_BACKEND_URL exclusively from environment
-const BASE_URL = process.env.REACT_APP_BACKEND_URL;
-const isProd = process.env.NODE_ENV === 'production';
+// Prefer a relative API root ("/api") in development unless an explicit backend URL is provided.
+// In production, default to the deployed API domain.
+//
+// This supports:
+// - Docker/nginx: can proxy "/api/" to backend
+// - Dev: CRA/CRACO proxy in src/setupProxy.js forwards "/api" to localhost:8000 (default)
+const DEFAULT_PROD_BACKEND_URL = 'https://api.tradescanpro.com';
+const RAW_BASE_URL = (process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? DEFAULT_PROD_BACKEND_URL : ''))
+  .trim()
+  .replace(/\/$/, '');
+const BASE_URL = RAW_BASE_URL || '';
 
-if (!BASE_URL) {
-  logger.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
-  if (isProd) {
-    throw new Error("Backend URL configuration missing");
-  }
+if (!RAW_BASE_URL) {
+  logger.info("REACT_APP_BACKEND_URL not set; using same-origin '/api' (dev proxy/nginx proxy expected).");
 }
 
 export const API_ROOT = `${BASE_URL}/api`;
