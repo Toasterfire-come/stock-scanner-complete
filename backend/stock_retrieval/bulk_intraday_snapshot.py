@@ -39,6 +39,11 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 
+# Ensure backend package imports work when running as a script
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
 # Django setup (mirror other stock_retrieval scripts)
 # This script updates the DB, so it must run in the backend environment (venv/docker).
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stockscanner_django.settings")
@@ -104,6 +109,28 @@ def configure_logging() -> logging.Logger:
 
 logger = configure_logging()
 
+_MP_CFG: Dict[str, Any] = {}
+
+
+def _init_pool(cfg: Dict[str, Any]) -> None:
+    # Called once per worker process.
+    global _MP_CFG
+    _MP_CFG = cfg
+
+
+def _mp_worker(job: Tuple[int, List[str], Optional[str]]) -> List["ChunkResult"]:
+    # Top-level function so it can be pickled under spawn.
+    _, symbols, proxy = job
+    return fetch_chunk_snapshot(
+        symbols,
+        proxy=proxy,
+        period=str(_MP_CFG["period"]),
+        interval=str(_MP_CFG["interval"]),
+        timeout_s=float(_MP_CFG["timeout_s"]),
+        retries=int(_MP_CFG["retries"]),
+        min_chunk_size=int(_MP_CFG["min_chunk_size"]),
+    )
+
 
 def load_proxies(proxy_file: Path) -> List[str]:
     """
@@ -138,6 +165,49 @@ def load_proxies(proxy_file: Path) -> List[str]:
         logger.warning(f"Failed reading proxy file {proxy_file}: {e}")
         return []
 
+def verify_proxies_for_yahoo(proxies: List[str], *, timeout_s: float, max_keep: int) -> List[str]:
+    """
+    Best-effort proxy verification for Yahoo endpoints.
+    Keeps only proxies that can fetch a tiny Yahoo quote payload quickly.
+    """
+    if not proxies:
+        return []
+
+    import requests
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    url = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=AAPL"
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    def test(p: str) -> Optional[Tuple[float, str]]:
+        try:
+            t0 = time.time()
+            r = requests.get(url, headers=headers, proxies={"http": p, "https": p}, timeout=timeout_s)
+            if r.status_code == 200 and "quoteResponse" in r.text:
+                return (time.time() - t0), p
+        except Exception:
+            return None
+        return None
+
+    good: List[Tuple[float, str]] = []
+    workers = min(60, max(10, len(proxies)))
+    logger.info(f"Verifying proxies (workers={workers}, timeout={timeout_s}s, target_keep={max_keep})...")
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = [ex.submit(test, p) for p in proxies]
+        for fut in as_completed(futs):
+            res = fut.result()
+            if not res:
+                continue
+            good.append(res)
+            if len(good) >= max_keep:
+                break
+
+    good.sort(key=lambda x: x[0])
+    verified = [p for _, p in good]
+    logger.info(f"Verified {len(verified)}/{len(proxies)} proxies")
+    return verified
+
 
 def normalize_proxy(proxy: str) -> str:
     proxy = proxy.strip()
@@ -165,11 +235,21 @@ def set_process_proxy(proxy: Optional[str]) -> None:
         return
 
     proxy_url = normalize_proxy(proxy)
+    proxy_dict = {"http": proxy_url, "https": proxy_url}
 
     # Preferred (newer yfinance)
     try:
         if hasattr(yf, "set_config"):
-            yf.set_config(proxy=proxy_url)
+            # yfinance expects a requests-style proxies dict, not a string
+            yf.set_config(proxy=proxy_dict)
+            return
+    except Exception:
+        pass
+
+    # Alternate new API (yfinance 1.0+)
+    try:
+        if hasattr(yf, "config") and hasattr(yf.config, "network"):
+            yf.config.network.proxy = proxy_dict
             return
     except Exception:
         pass
@@ -452,6 +532,17 @@ def bulk_apply_updates(rows: Dict[str, Dict[str, Any]], *, batch_size: int = 100
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bulk intraday snapshot updater (yfinance)")
+    parser.add_argument(
+        "--tickers-file",
+        type=str,
+        default=None,
+        help="Optional ticker source file (e.g. backend/data/nasdaq_latest.txt). If set, DB is not required.",
+    )
+    parser.add_argument(
+        "--no-db",
+        action="store_true",
+        help="Do not update database (still downloads and reports coverage).",
+    )
     parser.add_argument("--limit", type=int, default=None, help="Limit number of tickers (debug)")
     parser.add_argument("--chunk-size", type=int, default=300, help="Tickers per yf.download call")
     parser.add_argument("--min-chunk-size", type=int, default=50, help="Smallest chunk size after splitting")
@@ -467,6 +558,9 @@ def main() -> int:
         default=str(Path(__file__).parent / "http_proxies.txt"),
         help="Proxy file path (txt or json)",
     )
+    parser.add_argument("--verify-proxies", action="store_true", help="Verify proxies against Yahoo before use")
+    parser.add_argument("--proxy-verify-timeout", type=float, default=2.5, help="Proxy verification timeout (seconds)")
+    parser.add_argument("--max-proxies", type=int, default=50, help="Max proxies to use after verification")
     parser.add_argument("--progress-seconds", type=int, default=15, help="Progress log interval")
     parser.add_argument("--db-batch-size", type=int, default=1000, help="bulk_update batch size")
     args = parser.parse_args()
@@ -482,11 +576,59 @@ def main() -> int:
         f"use_proxies={args.use_proxies}"
     )
 
-    # Load tickers
-    tickers = list(Stock.objects.values_list("ticker", flat=True))
+    def load_tickers_from_file(path: Path) -> List[str]:
+        """
+        Load tickers from a simple line file or the pipe-delimited NASDAQ/NYSE lists in backend/data.
+        - If a line contains '|', uses the first column as ticker.
+        - Skips obvious header rows.
+        """
+        raw: List[str] = []
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "|" in line:
+                sym = line.split("|", 1)[0].strip()
+                if sym.lower() in ("symbol", "act symbol"):
+                    continue
+                raw.append(sym)
+            else:
+                raw.append(line)
+
+        # de-dupe while preserving order
+        seen = set()
+        out: List[str] = []
+        for t in raw:
+            t = t.strip()
+            if not t or t in seen:
+                continue
+            seen.add(t)
+            out.append(t)
+        return out
+
+    # Load tickers (DB by default, or file if provided)
+    tickers: List[str]
+    if args.tickers_file:
+        p = Path(args.tickers_file)
+        if not p.exists():
+            logger.error(f"--tickers-file not found: {p}")
+            return 2
+        tickers = load_tickers_from_file(p)
+        logger.info(f"Loaded {len(tickers)} tickers from file: {p}")
+    else:
+        try:
+            tickers = list(Stock.objects.values_list("ticker", flat=True))
+            logger.info(f"Loaded {len(tickers)} tickers from DB")
+        except Exception as e:
+            logger.error(
+                "Failed to load tickers from DB (DB not reachable in this environment).\n"
+                "Use --tickers-file backend/data/nasdaq_latest.txt --no-db to test downloads without DB.\n"
+                f"DB error: {e}"
+            )
+            return 2
+
     if args.limit:
         tickers = tickers[: args.limit]
-    logger.info(f"Loaded {len(tickers)} tickers from DB")
 
     # Proxies
     proxies: List[Optional[str]] = [None]
@@ -494,6 +636,13 @@ def main() -> int:
         proxy_file = Path(args.proxy_file)
         proxies_raw = load_proxies(proxy_file)
         proxies = [normalize_proxy(p) for p in proxies_raw if p]
+        if proxies and args.verify_proxies:
+            proxies = verify_proxies_for_yahoo(
+                proxies,
+                timeout_s=args.proxy_verify_timeout,
+                max_keep=args.max_proxies,
+            )
+
         if not proxies:
             logger.warning("No proxies loaded; continuing without proxies")
             proxies = [None]
@@ -509,18 +658,6 @@ def main() -> int:
 
     ctx = mp.get_context("spawn")
 
-    def worker(job: Tuple[int, List[str], Optional[str]]) -> List[ChunkResult]:
-        idx, symbols, proxy = job
-        return fetch_chunk_snapshot(
-            symbols,
-            proxy=proxy,
-            period=args.period,
-            interval=args.interval,
-            timeout_s=args.timeout,
-            retries=args.retries,
-            min_chunk_size=args.min_chunk_size,
-        )
-
     jobs: List[Tuple[int, List[str], Optional[str]]] = []
     for i, symbols in enumerate(work):
         proxy = proxies[i % len(proxies)] if proxies else None
@@ -533,8 +670,16 @@ def main() -> int:
 
     logger.info("Starting bulk downloads...")
 
-    with ctx.Pool(processes=args.workers) as pool:
-        for results in pool.imap_unordered(worker, jobs, chunksize=1):
+    cfg = {
+        "period": args.period,
+        "interval": args.interval,
+        "timeout_s": args.timeout,
+        "retries": args.retries,
+        "min_chunk_size": args.min_chunk_size,
+    }
+
+    with ctx.Pool(processes=args.workers, initializer=_init_pool, initargs=(cfg,)) as pool:
+        for results in pool.imap_unordered(_mp_worker, jobs, chunksize=1):
             # results is a list (because the fetcher may split chunks recursively)
             for r in results:
                 manager_rows.update(r.rows)
@@ -552,9 +697,16 @@ def main() -> int:
                 )
                 last_progress = now
 
-    # Apply DB updates
-    logger.info(f"Applying DB updates for {len(manager_rows)} tickers...")
-    updated = bulk_apply_updates(manager_rows, batch_size=args.db_batch_size)
+    updated = 0
+    if args.no_db:
+        logger.info("Skipping DB updates (--no-db)")
+    else:
+        logger.info(f"Applying DB updates for {len(manager_rows)} tickers...")
+        try:
+            updated = bulk_apply_updates(manager_rows, batch_size=args.db_batch_size)
+        except Exception as e:
+            logger.error(f"DB update failed: {e}")
+            logger.error("Tip: run with --no-db to validate downloads without a DB connection.")
 
     elapsed = time.time() - start
     unique_failed = sorted(set([t for t in failed_total if t not in manager_rows]))
