@@ -41,21 +41,6 @@ ingress:
       tcpKeepAlive: 30s
       keepAliveTimeout: 90s
 
-  # Health check endpoint - api.retailtradescanner.com (legacy)
-  - hostname: api.retailtradescanner.com
-    path: /health/*
-    service: http://localhost:8000
-    originRequest:
-      connectTimeout: 5s
-
-  # Main service - api.retailtradescanner.com (legacy)
-  - hostname: api.retailtradescanner.com
-    service: http://localhost:8000
-    originRequest:
-      connectTimeout: 30s
-      tcpKeepAlive: 30s
-      keepAliveTimeout: 90s
-
   # Catch-all rule
   - service: http_status:404
 

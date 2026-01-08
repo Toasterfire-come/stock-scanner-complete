@@ -6,7 +6,7 @@ set -euo pipefail
 # start Django + tunnel, and verify public /health/. Optionally updates WordPress backend URL.
 
 # Defaults (override with flags)
-CF_HOST="api.retailtradescanner.com"
+CF_HOST="api.tradescanpro.com"
 TUNNEL_UUID="66a404f0-c651-4141-bb4e-008a551bc5b5"
 PROJECT_DIR="$(pwd)"
 DJANGO_HOST="127.0.0.1"

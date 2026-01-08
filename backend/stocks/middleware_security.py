@@ -23,7 +23,7 @@ class SecurityHeadersMiddleware:
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",  # Allow Google Fonts and inline styles (React CSS-in-JS)
             "font-src 'self' https://fonts.gstatic.com data:",  # Google Fonts
             "img-src 'self' data: https: blob:",  # Allow images from anywhere (stock charts, logos)
-            "connect-src 'self' https://api.tradescanpro.com https://api.retailtradescanner.com wss: ws:",  # API calls and WebSockets
+            "connect-src 'self' https://api.tradescanpro.com wss: ws:",  # API calls and WebSockets
             "frame-ancestors 'none'",  # Prevent clickjacking (stricter than 'self')
             "base-uri 'self'",  # Restrict base tag
             "form-action 'self'",  # Only allow forms to submit to same origin
