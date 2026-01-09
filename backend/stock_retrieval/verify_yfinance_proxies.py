@@ -48,9 +48,10 @@ def normalize_proxy(proxy: str) -> str:
     p = proxy.strip()
     if not p:
         return p
+    # Preserve scheme if present; otherwise return host:port and let callers try schemes.
     if p.startswith("http://") or p.startswith("https://"):
         return p
-    return f"http://{p}"
+    return p
 
 
 def load_proxy_lines(path: Path) -> List[str]:
@@ -169,7 +170,14 @@ def _test_one_proxy_in_subprocess(
     Runs inside a subprocess (spawn). Must be top-level picklable.
     """
     t0 = _now_ms()
-    p = normalize_proxy(proxy)
+    p_raw = normalize_proxy(proxy)
+    proxy_url_variants: List[str]
+    if p_raw.startswith("http://") or p_raw.startswith("https://"):
+        proxy_url_variants = [p_raw]
+    else:
+        # Many public lists mix HTTP proxies and HTTPS proxies.
+        # Try both schemes because using the wrong scheme can cause CONNECT 400 errors.
+        proxy_url_variants = [f"http://{p_raw}", f"https://{p_raw}"]
 
     def clear_proxy_env() -> None:
         os.environ.pop("HTTP_PROXY", None)
@@ -187,47 +195,52 @@ def _test_one_proxy_in_subprocess(
         except Exception:
             pass
 
-    proxy_dict: Dict[str, str] = {"http": p, "https": p}
-
+    # Prefer the newer config API first (reduces deprecation warning noise).
     methods: List[Tuple[str, callable]] = []
 
-    def m_set_config() -> None:
-        import yfinance as yf
-        yf.set_config(proxy=proxy_dict)
+    def make_setters(proxy_url: str) -> List[Tuple[str, callable]]:
+        proxy_dict: Dict[str, str] = {"http": proxy_url, "https": proxy_url}
 
-    def m_config_network() -> None:
-        import yfinance as yf
-        # yfinance 1.x has yf.config.network.proxy
-        yf.config.network.proxy = proxy_dict
+        def m_config_network() -> None:
+            import yfinance as yf
+            yf.config.network.proxy = proxy_dict
 
-    def m_env() -> None:
-        os.environ["HTTP_PROXY"] = p
-        os.environ["HTTPS_PROXY"] = p
-        os.environ["http_proxy"] = p
-        os.environ["https_proxy"] = p
+        def m_set_config() -> None:
+            import yfinance as yf
+            yf.set_config(proxy=proxy_dict)
 
-    methods.append(("yf.set_config(dict)", m_set_config))
-    methods.append(("yf.config.network.proxy", m_config_network))
-    methods.append(("env HTTP(S)_PROXY", m_env))
+        def m_env() -> None:
+            os.environ["HTTP_PROXY"] = proxy_url
+            os.environ["HTTPS_PROXY"] = proxy_url
+            os.environ["http_proxy"] = proxy_url
+            os.environ["https_proxy"] = proxy_url
+
+        return [
+            ("yf.config.network.proxy", m_config_network),
+            ("yf.set_config(dict)", m_set_config),
+            ("env HTTP(S)_PROXY", m_env),
+        ]
 
     last_err: Optional[str] = None
 
-    for name, setter in methods:
-        for attempt in range(max_attempts):
-            try:
-                clear_proxy_env()
-                clear_yf_proxy()
-                setter()
-                ok, msg = _yf_download_smoke(period=period, interval=interval, timeout_s=timeout_s)
-                if ok:
-                    return ProxyTestResult(proxy=p, ok=True, method=name, elapsed_ms=_now_ms() - t0, error=None)
-                last_err = msg
-            except Exception as e:
-                last_err = str(e)
-                # small backoff
-                time.sleep(min(0.5, 0.1 * (attempt + 1)))
+    for proxy_url in proxy_url_variants:
+        for name, setter in make_setters(proxy_url):
+            for attempt in range(max_attempts):
+                try:
+                    clear_proxy_env()
+                    clear_yf_proxy()
+                    setter()
+                    ok, msg = _yf_download_smoke(period=period, interval=interval, timeout_s=timeout_s)
+                    if ok:
+                        return ProxyTestResult(proxy=proxy_url, ok=True, method=name, elapsed_ms=_now_ms() - t0, error=None)
+                    last_err = msg
+                except Exception as e:
+                    last_err = str(e)
+                    # small backoff
+                    time.sleep(min(0.5, 0.1 * (attempt + 1)))
 
-    return ProxyTestResult(proxy=p, ok=False, method=None, elapsed_ms=_now_ms() - t0, error=last_err or "unknown")
+    # Return the original input for traceability
+    return ProxyTestResult(proxy=p_raw, ok=False, method=None, elapsed_ms=_now_ms() - t0, error=last_err or "unknown")
 
 
 def main() -> int:

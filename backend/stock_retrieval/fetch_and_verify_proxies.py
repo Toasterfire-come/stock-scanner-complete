@@ -126,16 +126,13 @@ def yfinance_verify(
 
     ctx = mp.get_context("spawn")
 
-    # Normalize to full scheme for yfinance verifier
+    # Keep as host:port (no scheme) so verifier can try http:// and https://.
     norm = []
     for p in proxies_hostport:
         p = p.strip()
         if not p:
             continue
-        if p.startswith("http://") or p.startswith("https://"):
-            norm.append(p)
-        else:
-            norm.append("http://" + p)
+        norm.append(p)
 
     good: List[Tuple[int, str]] = []
     with ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx) as ex:
