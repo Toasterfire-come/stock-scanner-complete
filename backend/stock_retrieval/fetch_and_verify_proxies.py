@@ -6,9 +6,8 @@ Fetch + verify proxy candidates for yfinance/Yahoo (production-oriented)
 What this does:
 - Pulls proxy candidates from several public proxy list sources (HTTP/HTTPS).
 - Deduplicates.
-- Quick-checks HTTPS CONNECT to a Yahoo quote endpoint using `requests` (fast).
-- Then verifies a smaller set using a REAL `yf.download()` call in subprocesses
-  (this matches your bulk snapshot pipeline much more closely than requests).
+- Quick-checks using REAL `yf.download()` in subprocesses (fast but representative).
+- Then verifies a smaller set with a longer timeout using REAL `yf.download()` again.
 
 Outputs:
 - Raw fetched proxies: backend/stock_retrieval/http_proxies_fetched.txt
@@ -29,6 +28,7 @@ import argparse
 import os
 import sys
 import time
+import random
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
@@ -97,44 +97,14 @@ def fetch_sources(urls: List[str], *, timeout_s: float) -> List[str]:
     return dedupe_preserve_order(proxies)
 
 
-@dataclass
-class QuickCheckResult:
-    proxy: str
-    ok: bool
-    elapsed_ms: int
-
-
-def quick_check_yahoo_https_connect(proxy_hostport: str, *, timeout_s: float) -> QuickCheckResult:
-    """
-    Fast filter: does this proxy successfully tunnel HTTPS to Yahoo?
-    Uses requests for speed. This is a filter only; final verification is yfinance.
-    """
-    import requests
-
-    p_url = proxy_hostport
-    if not (p_url.startswith("http://") or p_url.startswith("https://")):
-        p_url = "http://" + p_url
-
-    url = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=AAPL"
-    headers = {"User-Agent": "Mozilla/5.0"}
-
-    t0 = time.time()
-    ok = False
-    try:
-        r = requests.get(
-            url,
-            headers=headers,
-            proxies={"http": p_url, "https": p_url},
-            timeout=timeout_s,
-        )
-        ok = r.status_code == 200 and "quoteResponse" in r.text
-    except Exception:
-        ok = False
-
-    return QuickCheckResult(proxy=proxy_hostport, ok=ok, elapsed_ms=int((time.time() - t0) * 1000))
-
-
-def yfinance_verify(proxies_hostport: List[str], *, max_workers: int, timeout_s: float, attempts: int) -> List[str]:
+def yfinance_verify(
+    proxies_hostport: List[str],
+    *,
+    max_workers: int,
+    timeout_s: float,
+    attempts: int,
+    stop_after: Optional[int] = None,
+) -> List[str]:
     """
     True verification using yfinance yf.download(), in subprocesses.
     Reuses the verifier implementation from verify_yfinance_proxies.py.
@@ -145,9 +115,14 @@ def yfinance_verify(proxies_hostport: List[str], *, max_workers: int, timeout_s:
     from concurrent.futures import ProcessPoolExecutor, as_completed
 
     try:
-        from verify_yfinance_proxies import _test_one_proxy_in_subprocess  # type: ignore
+        from verify_yfinance_proxies import _test_one_proxy_in_subprocess, _direct_connectivity_check  # type: ignore
     except Exception as e:
         raise RuntimeError(f"Failed to import verify_yfinance_proxies.py helpers: {e}")
+
+    # Sanity check: if direct yfinance can't reach Yahoo, proxy verification is meaningless.
+    ok_direct, msg_direct = _direct_connectivity_check(period="1d", interval="1m", timeout_s=min(15.0, timeout_s))
+    if not ok_direct:
+        raise RuntimeError(f"Direct yfinance connectivity failed (no proxy). Reason: {msg_direct}")
 
     ctx = mp.get_context("spawn")
 
@@ -172,6 +147,9 @@ def yfinance_verify(proxies_hostport: List[str], *, max_workers: int, timeout_s:
             r = fut.result()
             if getattr(r, "ok", False):
                 good.append((int(getattr(r, "elapsed_ms", 10**9)), str(getattr(r, "proxy", ""))))
+                if stop_after is not None and len(good) >= int(stop_after):
+                    # Best effort to stop early once we have enough working proxies.
+                    break
 
     good.sort(key=lambda x: x[0])
     return [p for _, p in good]
@@ -187,9 +165,12 @@ def main() -> int:
     parser.add_argument("--fetch-timeout", type=float, default=12.0, help="Timeout for fetching sources (seconds)")
     parser.add_argument("--max-fetch", type=int, default=20000, help="Max proxies to keep after fetch/dedupe")
 
-    parser.add_argument("--quick-timeout", type=float, default=3.0, help="Timeout for quick Yahoo CONNECT check")
-    parser.add_argument("--quick-workers", type=int, default=80, help="Parallel workers for quick check")
-    parser.add_argument("--max-quickpass", type=int, default=800, help="Max proxies to keep after quick check")
+    parser.add_argument("--shuffle", action="store_true", help="Shuffle fetched proxies before verification")
+
+    parser.add_argument("--quick-yf-timeout", type=float, default=4.0, help="Timeout for quick yfinance verification")
+    parser.add_argument("--quick-yf-workers", type=int, default=12, help="Parallel subprocesses for quick yfinance check")
+    parser.add_argument("--quick-yf-attempts", type=int, default=1, help="Attempts per proxy during quick yfinance check")
+    parser.add_argument("--max-quickpass", type=int, default=400, help="Stop quick check after N working proxies")
 
     parser.add_argument("--yf-timeout", type=float, default=12.0, help="Timeout for yfinance verification download")
     parser.add_argument("--yf-workers", type=int, default=20, help="Parallel subprocesses for yfinance verification")
@@ -217,41 +198,45 @@ def main() -> int:
         print("[ERROR] No proxies fetched")
         return 2
 
-    print(f"[INFO] Quick-checking HTTPS CONNECT to Yahoo (timeout={args.quick_timeout}s)...")
-    from concurrent.futures import ThreadPoolExecutor, as_completed
+    if args.shuffle:
+        random.shuffle(fetched)
 
-    quick_ok: List[Tuple[int, str]] = []
-    with ThreadPoolExecutor(max_workers=int(args.quick_workers)) as ex:
-        futs = [ex.submit(quick_check_yahoo_https_connect, p, timeout_s=float(args.quick_timeout)) for p in fetched]
-        checked = 0
-        for fut in as_completed(futs):
-            r = fut.result()
-            checked += 1
-            if r.ok:
-                quick_ok.append((r.elapsed_ms, r.proxy))
-            if checked % 500 == 0:
-                print(f"[PROGRESS] quick checked {checked}/{len(fetched)} ok={len(quick_ok)}")
-            if args.max_quickpass and len(quick_ok) >= int(args.max_quickpass):
-                # stop early once we have enough candidates
-                break
+    print(
+        "[INFO] Quick-checking proxies via yfinance yf.download() "
+        f"(workers={args.quick_yf_workers}, timeout={args.quick_yf_timeout}s)..."
+    )
+    try:
+        quickpass = yfinance_verify(
+            fetched,
+            max_workers=int(args.quick_yf_workers),
+            timeout_s=float(args.quick_yf_timeout),
+            attempts=int(args.quick_yf_attempts),
+            stop_after=int(args.max_quickpass) if args.max_quickpass else None,
+        )
+    except Exception as e:
+        print(f"[ERROR] Quick yfinance verification failed: {e}")
+        return 2
 
-    quick_ok.sort(key=lambda x: x[0])
-    quickpass = [p for _, p in quick_ok]
     write_list(out_quickpass, quickpass)
     print(f"[INFO] Quick-pass: {len(quickpass)} (wrote {out_quickpass})")
 
     if not quickpass:
-        print("[WARN] 0 proxies passed the Yahoo HTTPS CONNECT quick check.")
-        print("[WARN] Public proxies often fail HTTPS tunneling; try different sources or paid proxies.")
+        print("[WARN] 0 proxies passed quick yfinance verification.")
+        print("[WARN] Public proxies are often unusable for yfinance/Yahoo; try different sources or paid proxies.")
         return 0
 
     print(f"[INFO] Verifying with yfinance yf.download() (workers={args.yf_workers}, timeout={args.yf_timeout}s)...")
-    verified = yfinance_verify(
+    try:
+        verified = yfinance_verify(
         quickpass,
         max_workers=int(args.yf_workers),
         timeout_s=float(args.yf_timeout),
         attempts=int(args.yf_attempts),
-    )
+        stop_after=int(args.max_verified) if args.max_verified else None,
+        )
+    except Exception as e:
+        print(f"[ERROR] Full yfinance verification failed: {e}")
+        return 2
     if args.max_verified and len(verified) > int(args.max_verified):
         verified = verified[: int(args.max_verified)]
     write_list(out_verified, verified)
