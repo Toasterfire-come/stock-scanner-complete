@@ -195,11 +195,22 @@ def _test_one_proxy_in_subprocess(
         except Exception:
             pass
 
-    # Prefer the newer config API first (reduces deprecation warning noise).
+    # IMPORTANT:
+    # Model proxy setup after the existing daily scanner pattern:
+    #   yf.set_config(proxy="http://host:port")
+    #
+    # yfinance has changed proxy handling across versions; some environments
+    # accept a string, others require a dict. We try multiple methods, but
+    # prioritize the "daily scanner" style first.
     methods: List[Tuple[str, callable]] = []
 
     def make_setters(proxy_url: str) -> List[Tuple[str, callable]]:
         proxy_dict: Dict[str, str] = {"http": proxy_url, "https": proxy_url}
+
+        def m_set_config_str() -> None:
+            import yfinance as yf
+            # Daily scanner style (string URL)
+            yf.set_config(proxy=proxy_url)
 
         def m_config_network() -> None:
             import yfinance as yf
@@ -216,6 +227,7 @@ def _test_one_proxy_in_subprocess(
             os.environ["https_proxy"] = proxy_url
 
         return [
+            ("yf.set_config(str)", m_set_config_str),
             ("yf.config.network.proxy", m_config_network),
             ("yf.set_config(dict)", m_set_config),
             ("env HTTP(S)_PROXY", m_env),

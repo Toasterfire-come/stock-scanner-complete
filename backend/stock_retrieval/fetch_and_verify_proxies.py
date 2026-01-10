@@ -200,7 +200,8 @@ def main() -> int:
 
     print(
         "[INFO] Quick-checking proxies via yfinance yf.download() "
-        f"(workers={args.quick_yf_workers}, timeout={args.quick_yf_timeout}s)..."
+        f"(workers={args.quick_yf_workers}, timeout={args.quick_yf_timeout}s)... "
+        "(proxy setup mirrors daily scanner via yf.set_config(proxy=...) first)"
     )
     try:
         quickpass = yfinance_verify(
