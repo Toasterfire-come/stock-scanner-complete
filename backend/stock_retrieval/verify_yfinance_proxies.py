@@ -38,6 +38,21 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import io
+import contextlib
+
+try:
+    # When imported as a module
+    from backend.stock_retrieval.proxy_pool import candidate_proxy_urls  # type: ignore
+except Exception:
+    # When executed as a script from repo root
+    try:
+        from proxy_pool import candidate_proxy_urls  # type: ignore
+    except Exception:
+        # Last resort: add script dir to path and retry
+        _HERE = Path(__file__).resolve().parent
+        sys.path.insert(0, str(_HERE))
+        from proxy_pool import candidate_proxy_urls  # type: ignore
 
 
 def _now_ms() -> int:
@@ -93,21 +108,26 @@ def _yf_download_smoke(period: str, interval: str, timeout_s: float) -> Tuple[bo
     import pandas as pd
 
     # Use a single very liquid ticker for stable availability
-    df = yf.download(
-        tickers="AAPL",
-        period=period,
-        interval=interval,
-        group_by="ticker",
-        auto_adjust=False,
-        actions=False,
-        prepost=False,
-        progress=False,
-        threads=False,
-        timeout=timeout_s,
-    )
+    # yfinance prints failures noisily; suppress stdout/stderr for smoke checks
+    buf_out = io.StringIO()
+    buf_err = io.StringIO()
+    with contextlib.redirect_stdout(buf_out), contextlib.redirect_stderr(buf_err):
+        df = yf.download(
+            tickers="AAPL",
+            period=period,
+            interval=interval,
+            group_by="ticker",
+            auto_adjust=False,
+            actions=False,
+            prepost=False,
+            progress=False,
+            threads=False,
+            timeout=timeout_s,
+        )
 
     if df is None or getattr(df, "empty", True):
-        return False, "empty dataframe"
+        err = (buf_err.getvalue() or buf_out.getvalue() or "empty dataframe").strip()
+        return False, err[:500] if err else "empty dataframe"
 
     # Single ticker should have simple columns, but yfinance can still return MultiIndex.
     try:
@@ -171,13 +191,9 @@ def _test_one_proxy_in_subprocess(
     """
     t0 = _now_ms()
     p_raw = normalize_proxy(proxy)
-    proxy_url_variants: List[str]
-    if p_raw.startswith("http://") or p_raw.startswith("https://"):
-        proxy_url_variants = [p_raw]
-    else:
-        # Many public lists mix HTTP proxies and HTTPS proxies.
-        # Try both schemes because using the wrong scheme can cause CONNECT 400 errors.
-        proxy_url_variants = [f"http://{p_raw}", f"https://{p_raw}"]
+    proxy_url_variants = candidate_proxy_urls(p_raw)
+    if not proxy_url_variants:
+        return ProxyTestResult(proxy=p_raw, ok=False, method=None, elapsed_ms=_now_ms() - t0, error="invalid proxy")
 
     def clear_proxy_env() -> None:
         os.environ.pop("HTTP_PROXY", None)
