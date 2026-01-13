@@ -44,6 +44,10 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+# Proxy pool + error classification (pure-Python, safe to import)
+from backend.stock_retrieval.proxy_pool import ProxyPool  # noqa: E402
+from backend.stock_retrieval.proxy_error_classifier import is_hard_proxy_failure  # noqa: E402
+
 # Django setup (mirror other stock_retrieval scripts)
 # This script updates the DB, so it must run in the backend environment (venv/docker).
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stockscanner_django.settings")
@@ -530,6 +534,240 @@ def bulk_apply_updates(rows: Dict[str, Dict[str, Any]], *, batch_size: int = 100
     return updated_total
 
 
+@dataclass
+class RunStats:
+    chunks_completed: int = 0
+    chunk_errors: int = 0
+    proxy_successes: int = 0
+    proxy_failures: int = 0
+    total_chunk_duration_s: float = 0.0
+    error_reasons: Dict[str, int] = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        if self.error_reasons is None:
+            self.error_reasons = {}
+
+
+def _summarize_error(error: Optional[str]) -> str:
+    if not error:
+        return "none"
+    e = str(error).strip()
+    if not e:
+        return "none"
+    # Keep it stable-ish for counting; CONNECT status codes are high-signal.
+    low = e.lower()
+    if "connect" in low:
+        for code in ("400", "401", "403", "407", "429", "502", "503", "504"):
+            if code in low:
+                return f"CONNECT_{code}"
+        return "CONNECT"
+    if "timed out" in low or "timeout" in low:
+        return "timeout"
+    if "ssl" in low or "certificate" in low:
+        return "ssl"
+    if "rate" in low and "limit" in low:
+        return "rate_limit"
+    return low[:80]
+
+
+def run_bulk_download(
+    tickers: List[str],
+    *,
+    workers: int,
+    chunk_size: int,
+    min_chunk_size: int,
+    period: str,
+    interval: str,
+    timeout_s: float,
+    retries: int,
+    use_proxies: bool,
+    proxy_file: Path,
+    verify_proxies: bool,
+    proxy_verify_timeout: float,
+    max_proxies: int,
+    proxy_pool_json: Path,
+    proxy_quarantine_seconds: int,
+    proxy_failure_quarantine_threshold: int,
+    proxy_min_successes_to_prefer: int,
+    progress_seconds: int,
+    logger_prefix: str,
+) -> Tuple[Dict[str, Dict[str, Any]], List[str], RunStats, ProxyPool]:
+    """
+    Executes the bulk yfinance snapshot loop (multiprocess), with optional proxy rotation via ProxyPool.
+
+    Returns:
+      (rows_by_ticker, failed_tickers, stats, proxy_pool)
+    """
+    start = time.time()
+
+    # Load proxy pool state (best-effort)
+    proxy_pool = ProxyPool.load(proxy_pool_json)
+    proxy_pool.quarantine_seconds = int(proxy_quarantine_seconds)
+    proxy_pool.failure_quarantine_threshold = int(proxy_failure_quarantine_threshold)
+    proxy_pool.min_successes_to_prefer = int(proxy_min_successes_to_prefer)
+
+    # Proxies
+    proxies_loaded: List[str] = []
+    if use_proxies:
+        proxies_raw = load_proxies(proxy_file)
+        proxies_loaded = [normalize_proxy(p) for p in proxies_raw if p]
+        proxy_pool.add_many(proxies_loaded)
+
+        if proxies_loaded and verify_proxies:
+            verified = verify_proxies_for_yahoo(
+                proxies_loaded,
+                timeout_s=float(proxy_verify_timeout),
+                max_keep=int(max_proxies),
+            )
+            now_ts = time.time()
+            # Mark verification metadata
+            for p in proxies_loaded:
+                st = proxy_pool.upsert(p)
+                st.last_verified_ts = now_ts
+                st.supports_https_connect = None  # set True below for verified
+                st.yahoo_ok = False
+            for p in verified:
+                st = proxy_pool.upsert(p)
+                st.last_verified_ts = now_ts
+                st.supports_https_connect = True
+                st.yahoo_ok = True
+            # Prefer verified subset for actual usage
+            proxies_loaded = verified
+            if proxies_loaded:
+                proxy_pool.add_many(proxies_loaded)
+
+        if not proxies_loaded:
+            logger.warning(f"{logger_prefix} No usable proxies; continuing without proxies")
+            use_proxies = False
+
+    # Prepare work chunks
+    work = chunked(tickers, int(chunk_size))
+    logger.info(f"{logger_prefix} Created {len(work)} chunks (chunk_size={chunk_size})")
+
+    # Multiprocessing with dynamic scheduling so proxy health affects future assignments.
+    import multiprocessing as mp
+    from concurrent.futures import ProcessPoolExecutor
+
+    ctx = mp.get_context("spawn")
+
+    cfg = {
+        "period": period,
+        "interval": interval,
+        "timeout_s": timeout_s,
+        "retries": retries,
+        "min_chunk_size": min_chunk_size,
+    }
+
+    stats = RunStats()
+    manager_rows: Dict[str, Dict[str, Any]] = {}
+    failed_total: List[str] = []
+    completed = 0
+    last_progress = time.time()
+
+    # Keep a small backlog to balance throughput and responsiveness to proxy quarantine.
+    max_in_flight = max(1, int(workers) * 2)
+    next_idx = 0
+
+    def choose_proxy_for_job() -> Optional[str]:
+        if not use_proxies:
+            return None
+        p = proxy_pool.choose()
+        return p
+
+    logger.info(f"{logger_prefix} Starting bulk downloads (workers={workers}, in_flight={max_in_flight})...")
+
+    futures: Dict[Any, Optional[str]] = {}
+    with ProcessPoolExecutor(max_workers=int(workers), mp_context=ctx, initializer=_init_pool, initargs=(cfg,)) as ex:
+        # Prime the executor
+        while next_idx < len(work) and len(futures) < max_in_flight:
+            symbols = work[next_idx]
+            proxy = choose_proxy_for_job()
+            fut = ex.submit(_mp_worker, (next_idx, symbols, proxy))
+            futures[fut] = proxy
+            next_idx += 1
+        # Drain with dynamic refills
+        from concurrent.futures import FIRST_COMPLETED, wait
+
+        while futures:
+            done, _pending = wait(list(futures.keys()), return_when=FIRST_COMPLETED)
+            for fut in done:
+                proxy_used = futures.pop(fut, None)
+                try:
+                    results = fut.result()
+                except Exception as e:
+                    # Worker crashed; treat as chunk failure, quarantine proxy if one was used.
+                    err = f"worker_exception: {e}"
+                    stats.chunk_errors += 1
+                    key = _summarize_error(err)
+                    stats.error_reasons[key] = stats.error_reasons.get(key, 0) + 1
+                    if proxy_used:
+                        stats.proxy_failures += 1
+                        proxy_pool.record_failure_ex(proxy_used, err, force_quarantine=True)
+                    results = []
+
+                # results is a list (because the fetcher may split chunks recursively)
+                for r in results:
+                    stats.total_chunk_duration_s += float(r.duration_s)
+                    manager_rows.update(r.rows)
+                    failed_total.extend(r.failed)
+
+                    if r.error:
+                        stats.chunk_errors += 1
+                        reason = _summarize_error(r.error)
+                        stats.error_reasons[reason] = stats.error_reasons.get(reason, 0) + 1
+                        if r.used_proxy:
+                            stats.proxy_failures += 1
+                            proxy_pool.record_failure_ex(
+                                r.used_proxy,
+                                r.error,
+                                force_quarantine=is_hard_proxy_failure(r.error),
+                            )
+                    else:
+                        if r.used_proxy:
+                            stats.proxy_successes += 1
+                            proxy_pool.record_success(r.used_proxy, latency_ms=float(r.duration_s) * 1000.0)
+
+                completed += 1
+                stats.chunks_completed = completed
+
+                now = time.time()
+                if now - last_progress >= int(progress_seconds):
+                    elapsed = now - start
+                    rate_chunks = completed / elapsed if elapsed > 0 else 0
+                    quarantined = len([p for p in proxy_pool.proxies if proxy_pool._stats[p].is_quarantined(now)])  # noqa: SLF001
+                    logger.info(
+                        f"{logger_prefix} Progress: {completed}/{len(work)} chunks | "
+                        f"rows={len(manager_rows)} failed={len(set(failed_total))} | "
+                        f"chunk_rate={rate_chunks:.2f}/s | "
+                        f"proxy_ok={stats.proxy_successes} proxy_fail={stats.proxy_failures} "
+                        f"quarantined={quarantined}/{len(proxy_pool.proxies)} | "
+                        f"elapsed={elapsed:.1f}s"
+                    )
+                    # Persist pool state periodically (best-effort self-healing)
+                    try:
+                        proxy_pool.save(proxy_pool_json)
+                    except Exception:
+                        pass
+                    last_progress = now
+
+            # Refill queue after processing completions
+            while next_idx < len(work) and len(futures) < max_in_flight:
+                symbols = work[next_idx]
+                proxy = choose_proxy_for_job()
+                fut2 = ex.submit(_mp_worker, (next_idx, symbols, proxy))
+                futures[fut2] = proxy
+                next_idx += 1
+
+    # Final save
+    try:
+        proxy_pool.save(proxy_pool_json)
+    except Exception:
+        pass
+
+    unique_failed = sorted(set([t for t in failed_total if t not in manager_rows]))
+    return manager_rows, unique_failed, stats, proxy_pool
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bulk intraday snapshot updater (yfinance)")
     parser.add_argument(
@@ -561,8 +799,23 @@ def main() -> int:
     parser.add_argument("--verify-proxies", action="store_true", help="Verify proxies against Yahoo before use")
     parser.add_argument("--proxy-verify-timeout", type=float, default=2.5, help="Proxy verification timeout (seconds)")
     parser.add_argument("--max-proxies", type=int, default=50, help="Max proxies to use after verification")
+    parser.add_argument(
+        "--proxy-pool-json",
+        type=str,
+        default=str(Path(__file__).parent / "http_proxies_gold.json"),
+        help="Path to persisted proxy pool stats JSON (read/write)",
+    )
+    parser.add_argument("--proxy-quarantine-seconds", type=int, default=30 * 60, help="Quarantine duration for bad proxies")
+    parser.add_argument(
+        "--proxy-failure-threshold",
+        type=int,
+        default=1,
+        help="Failures needed to quarantine (hard CONNECT failures are immediate regardless)",
+    )
+    parser.add_argument("--proxy-min-successes-to-prefer", type=int, default=1, help="Prefer proxies with >=N successes")
     parser.add_argument("--progress-seconds", type=int, default=15, help="Progress log interval")
     parser.add_argument("--db-batch-size", type=int, default=1000, help="bulk_update batch size")
+    parser.add_argument("--second-pass", action="store_true", help="Retry only failed tickers with smaller chunks")
     args = parser.parse_args()
 
     start = time.time()
@@ -630,72 +883,30 @@ def main() -> int:
     if args.limit:
         tickers = tickers[: args.limit]
 
-    # Proxies
-    proxies: List[Optional[str]] = [None]
-    if args.use_proxies:
-        proxy_file = Path(args.proxy_file)
-        proxies_raw = load_proxies(proxy_file)
-        proxies = [normalize_proxy(p) for p in proxies_raw if p]
-        if proxies and args.verify_proxies:
-            proxies = verify_proxies_for_yahoo(
-                proxies,
-                timeout_s=args.proxy_verify_timeout,
-                max_keep=args.max_proxies,
-            )
+    proxy_pool_json = Path(args.proxy_pool_json)
+    proxy_file = Path(args.proxy_file)
 
-        if not proxies:
-            logger.warning("No proxies loaded; continuing without proxies")
-            proxies = [None]
-        else:
-            logger.info(f"Loaded {len(proxies)} proxies")
-
-    # Prepare work chunks
-    work = chunked(tickers, args.chunk_size)
-    logger.info(f"Created {len(work)} chunks")
-
-    # Run multiprocessing workers
-    import multiprocessing as mp
-
-    ctx = mp.get_context("spawn")
-
-    jobs: List[Tuple[int, List[str], Optional[str]]] = []
-    for i, symbols in enumerate(work):
-        proxy = proxies[i % len(proxies)] if proxies else None
-        jobs.append((i, symbols, proxy))
-
-    manager_rows: Dict[str, Dict[str, Any]] = {}
-    failed_total: List[str] = []
-    completed = 0
-    last_progress = time.time()
-
-    logger.info("Starting bulk downloads...")
-
-    cfg = {
-        "period": args.period,
-        "interval": args.interval,
-        "timeout_s": args.timeout,
-        "retries": args.retries,
-        "min_chunk_size": args.min_chunk_size,
-    }
-
-    with ctx.Pool(processes=args.workers, initializer=_init_pool, initargs=(cfg,)) as pool:
-        for results in pool.imap_unordered(_mp_worker, jobs, chunksize=1):
-            # results is a list (because the fetcher may split chunks recursively)
-            for r in results:
-                manager_rows.update(r.rows)
-                failed_total.extend(r.failed)
-            completed += 1
-
-            now = time.time()
-            if now - last_progress >= args.progress_seconds:
-                elapsed = now - start
-                rate_chunks = completed / elapsed if elapsed > 0 else 0
-                logger.info(
-                    f"Progress: {completed}/{len(jobs)} chunks | "
-                    f"rows={len(manager_rows)} failed={len(set(failed_total))} | "
-                    f"chunk_rate={rate_chunks:.2f}/s | elapsed={elapsed:.1f}s"
-                )
-                last_progress = now
+    manager_rows, unique_failed, run_stats, proxy_pool = run_bulk_download(
+        tickers,
+        workers=int(args.workers),
+        chunk_size=int(args.chunk_size),
+        min_chunk_size=int(args.min_chunk_size),
+        period=str(args.period),
+        interval=str(args.interval),
+        timeout_s=float(args.timeout),
+        retries=int(args.retries),
+        use_proxies=bool(args.use_proxies),
+        proxy_file=proxy_file,
+        verify_proxies=bool(args.verify_proxies),
+        proxy_verify_timeout=float(args.proxy_verify_timeout),
+        max_proxies=int(args.max_proxies),
+        proxy_pool_json=proxy_pool_json,
+        proxy_quarantine_seconds=int(args.proxy_quarantine_seconds),
+        proxy_failure_quarantine_threshold=int(args.proxy_failure_threshold),
+        proxy_min_successes_to_prefer=int(args.proxy_min_successes_to_prefer),
+        progress_seconds=int(args.progress_seconds),
+        logger_prefix="",
+    )
 
     updated = 0
     if args.no_db:
@@ -708,8 +919,46 @@ def main() -> int:
             logger.error(f"DB update failed: {e}")
             logger.error("Tip: run with --no-db to validate downloads without a DB connection.")
 
+    # Optional second-pass retry for just the failures (tight chunks)
+    if args.second_pass and unique_failed:
+        logger.info("=" * 80)
+        logger.info(f"SECOND PASS (failures only): {len(unique_failed)} tickers")
+        logger.info("=" * 80)
+        rows2, failed2, stats2, proxy_pool2 = run_bulk_download(
+            unique_failed,
+            workers=max(1, int(args.workers)),
+            chunk_size=min(int(args.min_chunk_size), 50),
+            min_chunk_size=min(int(args.min_chunk_size), 25),
+            period=str(args.period),
+            interval=str(args.interval),
+            timeout_s=float(args.timeout),
+            retries=max(1, int(args.retries)),
+            use_proxies=False,  # conservative: retry direct to avoid proxy noise
+            proxy_file=proxy_file,
+            verify_proxies=False,
+            proxy_verify_timeout=float(args.proxy_verify_timeout),
+            max_proxies=0,
+            proxy_pool_json=proxy_pool_json,
+            proxy_quarantine_seconds=int(args.proxy_quarantine_seconds),
+            proxy_failure_quarantine_threshold=int(args.proxy_failure_threshold),
+            proxy_min_successes_to_prefer=int(args.proxy_min_successes_to_prefer),
+            progress_seconds=int(args.progress_seconds),
+            logger_prefix="[PASS2]",
+        )
+        manager_rows.update(rows2)
+        unique_failed = failed2
+        # Persist whichever pool is latest (should be same file)
+        proxy_pool = proxy_pool2
+        # Merge stats
+        run_stats.chunks_completed += stats2.chunks_completed
+        run_stats.chunk_errors += stats2.chunk_errors
+        run_stats.proxy_successes += stats2.proxy_successes
+        run_stats.proxy_failures += stats2.proxy_failures
+        run_stats.total_chunk_duration_s += stats2.total_chunk_duration_s
+        for k, v in stats2.error_reasons.items():
+            run_stats.error_reasons[k] = run_stats.error_reasons.get(k, 0) + v
+
     elapsed = time.time() - start
-    unique_failed = sorted(set([t for t in failed_total if t not in manager_rows]))
 
     logger.info("=" * 80)
     logger.info("BULK SNAPSHOT COMPLETE")
@@ -721,6 +970,21 @@ def main() -> int:
     logger.info(f"Elapsed: {elapsed:.1f}s ({elapsed/60:.2f} min)")
     if elapsed > 0:
         logger.info(f"Effective rate: {len(tickers)/elapsed:.1f} tickers/sec requested")
+    if run_stats.chunks_completed:
+        avg_chunk_s = run_stats.total_chunk_duration_s / max(1, run_stats.chunks_completed)
+        logger.info(f"Avg chunk duration: {avg_chunk_s:.2f}s (sum={run_stats.total_chunk_duration_s:.1f}s)")
+    if run_stats.error_reasons:
+        top = sorted(run_stats.error_reasons.items(), key=lambda x: x[1], reverse=True)[:8]
+        logger.info("Top error reasons:")
+        for reason, count in top:
+            logger.info(f"  - {reason}: {count}")
+    if args.use_proxies:
+        quarantined = len([p for p in proxy_pool.proxies if proxy_pool._stats[p].is_quarantined()])  # noqa: SLF001
+        logger.info(
+            f"Proxy pool: total={len(proxy_pool.proxies)} quarantined={quarantined} "
+            f"proxy_ok={run_stats.proxy_successes} proxy_fail={run_stats.proxy_failures} "
+            f"pool_json={proxy_pool_json}"
+        )
 
     if unique_failed:
         # Keep the output small; log first 25
