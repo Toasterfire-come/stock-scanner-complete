@@ -20,10 +20,11 @@ import asyncio
 import time
 import json
 from pathlib import Path
-from datetime import datetime
-from typing import Dict, Optional
+from datetime import datetime, timedelta
+from typing import Dict, Optional, List, Tuple
 from zoneinfo import ZoneInfo
 import yfinance as yf
+import pandas as pd
 
 # Django setup
 sys.path.insert(0, str(Path(__file__).parent))
@@ -32,6 +33,8 @@ django.setup()
 
 from stocks.models import Stock
 from asgiref.sync import sync_to_async
+
+from backend.stock_retrieval.realtime_backfill_policy import choose_backfill_tickers
 
 
 class OneMinuteScanner:
@@ -53,6 +56,15 @@ class OneMinuteScanner:
             str(Path(__file__).with_suffix(".rotation_state.json"))
         ))
 
+        # Optional snapshot backfill (coverage guarantee for free/best-effort "realtime")
+        self.backfill_enabled = os.getenv("YF_BACKFILL_ENABLE", "1").lower() in ("1", "true", "yes")
+        self.backfill_stale_seconds = int(os.getenv("YF_BACKFILL_STALE_SECONDS", "120"))
+        self.backfill_max_tickers = int(os.getenv("YF_BACKFILL_MAX_TICKERS_PER_MINUTE", "1500"))
+        self.backfill_chunk_size = int(os.getenv("YF_BACKFILL_CHUNK_SIZE", "250"))
+        self.backfill_timeout_seconds = float(os.getenv("YF_BACKFILL_TIMEOUT_SECONDS", "10"))
+        self.hot_tickers_csv = os.getenv("YF_HOT_TICKERS", "").strip()
+        self.hot_tickers_file = os.getenv("YF_HOT_TICKERS_FILE", "").strip()
+
     def is_market_hours(self):
         """Check if current time is within market hours (9:30 AM - 4:00 PM EST, weekdays)"""
         now_est = datetime.now(self.est_tz)
@@ -72,6 +84,149 @@ class OneMinuteScanner:
     def get_all_tickers(self):
         """Get all tickers from database"""
         return list(Stock.objects.values_list('ticker', flat=True))
+
+    def _load_hot_tickers(self) -> List[str]:
+        out: List[str] = []
+        if self.hot_tickers_csv:
+            out.extend([x.strip().upper() for x in self.hot_tickers_csv.split(",") if x.strip()])
+        if self.hot_tickers_file:
+            try:
+                p = Path(self.hot_tickers_file)
+                if p.exists():
+                    for line in p.read_text().splitlines():
+                        s = line.strip().upper()
+                        if s and not s.startswith("#"):
+                            out.append(s)
+            except Exception:
+                pass
+        # De-dupe preserve order
+        seen = set()
+        uniq: List[str] = []
+        for t in out:
+            if t and t not in seen:
+                seen.add(t)
+                uniq.append(t)
+        return uniq
+
+    def _extract_ticker_frame(self, df: pd.DataFrame, ticker: str) -> Optional[pd.DataFrame]:
+        if df is None or df.empty:
+            return None
+        cols = df.columns
+        if isinstance(cols, pd.MultiIndex):
+            if ticker in cols.get_level_values(0):
+                return df[ticker].copy()
+            if ticker in cols.get_level_values(1):
+                try:
+                    return df.xs(ticker, level=1, axis=1).copy()
+                except Exception:
+                    return None
+        return None
+
+    def _compute_latest_bar_metrics(self, ticker_df: pd.DataFrame) -> Optional[Tuple[float, Optional[int], Optional[float]]]:
+        if ticker_df is None or ticker_df.empty:
+            return None
+        if "Close" not in ticker_df.columns:
+            return None
+        s = ticker_df["Close"].dropna()
+        if s.empty:
+            return None
+        last_close = float(s.iloc[-1])
+        last_vol: Optional[int] = None
+        if "Volume" in ticker_df.columns:
+            try:
+                v = ticker_df["Volume"].iloc[-1]
+                if v is not None and not (isinstance(v, float) and pd.isna(v)):
+                    last_vol = int(v)
+            except Exception:
+                last_vol = None
+
+        prev_close: Optional[float] = None
+        try:
+            dates = pd.to_datetime(s.index).date
+            last_date = dates[-1]
+            for i in range(len(s) - 2, -1, -1):
+                if dates[i] != last_date:
+                    prev_close = float(s.iloc[i])
+                    break
+        except Exception:
+            prev_close = None
+        return last_close, last_vol, prev_close
+
+    @sync_to_async
+    def get_stale_tickers(self, cutoff_dt: datetime) -> List[str]:
+        return list(Stock.objects.filter(last_updated__lt=cutoff_dt).values_list("ticker", flat=True))
+
+    @sync_to_async
+    def apply_backfill_rows(self, rows: Dict[str, Dict]) -> int:
+        updated = 0
+        now = datetime.now()
+        for t, data in rows.items():
+            try:
+                Stock.objects.filter(ticker=t).update(
+                    current_price=data.get("current_price"),
+                    volume=data.get("volume"),
+                    price_change=data.get("price_change"),
+                    price_change_percent=data.get("price_change_percent"),
+                    last_updated=now,
+                )
+                updated += 1
+            except Exception:
+                continue
+        return updated
+
+    async def run_snapshot_backfill(self, tickers: List[str]) -> int:
+        if not tickers:
+            return 0
+        print(f"[BACKFILL] Snapshot polling {len(tickers)} tickers (chunk={self.backfill_chunk_size})...")
+        rows: Dict[str, Dict] = {}
+
+        # Chunked yf.download (best-effort, no proxies by default)
+        for i in range(0, len(tickers), self.backfill_chunk_size):
+            chunk = tickers[i : i + self.backfill_chunk_size]
+            try:
+                df = yf.download(
+                    tickers=" ".join(chunk),
+                    period="2d",
+                    interval="1m",
+                    group_by="ticker",
+                    auto_adjust=False,
+                    actions=False,
+                    prepost=False,
+                    progress=False,
+                    threads=False,
+                    timeout=self.backfill_timeout_seconds,
+                )
+            except Exception as e:
+                print(f"[BACKFILL] Chunk failed ({len(chunk)}): {e}")
+                continue
+
+            if df is None or df.empty:
+                continue
+
+            for t in chunk:
+                try:
+                    tdf = self._extract_ticker_frame(df, t)
+                    metrics = self._compute_latest_bar_metrics(tdf) if tdf is not None else None
+                    if not metrics:
+                        continue
+                    last_close, last_vol, prev_close = metrics
+                    price_change = None
+                    price_change_percent = None
+                    if prev_close and prev_close > 0:
+                        price_change = last_close - prev_close
+                        price_change_percent = (price_change / prev_close) * 100.0
+                    rows[t] = {
+                        "current_price": last_close,
+                        "volume": last_vol,
+                        "price_change": price_change,
+                        "price_change_percent": price_change_percent,
+                    }
+                except Exception:
+                    continue
+
+        updated = await self.apply_backfill_rows(rows)
+        print(f"[BACKFILL] Updated {updated} tickers via snapshot backfill")
+        return updated
 
     def websocket_message_handler(self, message):
         """Handle WebSocket messages - store price and volume updates"""
@@ -231,6 +386,23 @@ class OneMinuteScanner:
         # Update database
         successful, failed = await self.update_database()
 
+        # Optional snapshot backfill for stale tickers (coverage guarantee)
+        backfill_updated = 0
+        if self.backfill_enabled:
+            try:
+                hot = self._load_hot_tickers()
+                cutoff = datetime.now() - timedelta(seconds=self.backfill_stale_seconds)
+                stale = await self.get_stale_tickers(cutoff)
+                backfill_tickers = choose_backfill_tickers(
+                    hot_tickers=hot,
+                    stale_tickers=stale,
+                    max_tickers=self.backfill_max_tickers,
+                )
+                if backfill_tickers:
+                    backfill_updated = await self.run_snapshot_backfill(backfill_tickers)
+            except Exception as e:
+                print(f"[BACKFILL] Failed: {e}")
+
         # Results
         total_time = time.time() - start_time
         subscribed_count = len(tickers_for_ws)
@@ -245,6 +417,8 @@ class OneMinuteScanner:
         print(f"Subscribed this cycle: {subscribed_count}")
         print(f"WebSocket updates: {len(self.websocket_updates)}")
         print(f"Successfully updated: {successful} ({subscribed_success_rate:.1f}% of subscribed)")
+        if self.backfill_enabled:
+            print(f"Snapshot backfill updated: {backfill_updated}")
         print(f"Failed: {failed}")
         print(f"Total time: {total_time:.1f}s")
         print(f"Subscribe rate: {subscribed_rate:.1f} tickers/second")
