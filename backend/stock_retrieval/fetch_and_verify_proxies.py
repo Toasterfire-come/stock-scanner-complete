@@ -35,6 +35,7 @@ from typing import Iterable, List, Optional, Tuple
 
 
 HERE = Path(__file__).resolve().parent
+POOL_JSON_DEFAULT = HERE / "http_proxies_gold.json"
 
 
 def normalize_proxy(line: str) -> Optional[str]:
@@ -77,6 +78,88 @@ DEFAULT_SOURCES = [
     "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
     "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/https.txt",
 ]
+
+def _tcp_probe(host: str, port: int, *, timeout_s: float) -> bool:
+    import socket
+
+    try:
+        with socket.create_connection((host, int(port)), timeout=float(timeout_s)):
+            return True
+    except Exception:
+        return False
+
+
+def _split_hostport(p: str) -> Optional[Tuple[str, int]]:
+    s = str(p).strip()
+    if s.startswith("http://"):
+        s = s[len("http://") :]
+    elif s.startswith("https://"):
+        s = s[len("https://") :]
+    if ":" not in s:
+        return None
+    host, port_s = s.rsplit(":", 1)
+    try:
+        return host.strip(), int(port_s.strip())
+    except Exception:
+        return None
+
+
+def prefilter_https_connect(
+    candidates: List[str],
+    *,
+    timeout_s: float,
+    max_workers: int,
+    stop_after: Optional[int],
+) -> List[Tuple[float, str]]:
+    """
+    Stage C/D prefilter:
+    - TCP reachability
+    - HTTPS GET to example.com through proxy (CONNECT capability)
+    - HTTPS GET to Yahoo quote endpoint through proxy (Yahoo not blocking)
+
+    Returns list of (latency_seconds, proxy_url) sorted by latency.
+    """
+    import requests
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    example_url = "https://example.com/"
+    yahoo_url = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=AAPL"
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    def test(proxy_url: str) -> Optional[Tuple[float, str]]:
+        hp = _split_hostport(proxy_url)
+        if hp and not _tcp_probe(hp[0], hp[1], timeout_s=min(1.5, float(timeout_s))):
+            return None
+
+        proxies = {"http": proxy_url, "https": proxy_url}
+        try:
+            t0 = time.time()
+            r1 = requests.get(example_url, headers=headers, proxies=proxies, timeout=float(timeout_s))
+            if r1.status_code not in (200, 301, 302):
+                return None
+            r2 = requests.get(yahoo_url, headers=headers, proxies=proxies, timeout=float(timeout_s))
+            if r2.status_code != 200 or "quoteResponse" not in r2.text:
+                return None
+            return (time.time() - t0), proxy_url
+        except Exception:
+            return None
+
+    good: List[Tuple[float, str]] = []
+    if not candidates:
+        return good
+
+    with ThreadPoolExecutor(max_workers=int(max_workers)) as ex:
+        futs = [ex.submit(test, p) for p in candidates]
+        for fut in as_completed(futs):
+            res = fut.result()
+            if not res:
+                continue
+            good.append(res)
+            if stop_after is not None and len(good) >= int(stop_after):
+                break
+
+    good.sort(key=lambda x: x[0])
+    return good
 
 
 def fetch_sources(urls: List[str], *, timeout_s: float) -> List[str]:
@@ -164,6 +247,25 @@ def main() -> int:
 
     parser.add_argument("--shuffle", action="store_true", help="Shuffle fetched proxies before verification")
 
+    parser.add_argument(
+        "--prefilter-timeout",
+        type=float,
+        default=3.0,
+        help="Timeout for HTTPS CONNECT prefilter (requests) (seconds)",
+    )
+    parser.add_argument(
+        "--prefilter-workers",
+        type=int,
+        default=120,
+        help="Parallelism for HTTPS CONNECT prefilter (threads)",
+    )
+    parser.add_argument(
+        "--max-prefilter-pass",
+        type=int,
+        default=600,
+        help="Stop prefilter after N currently-working Yahoo proxies (low yield is expected)",
+    )
+
     parser.add_argument("--quick-yf-timeout", type=float, default=4.0, help="Timeout for quick yfinance verification")
     parser.add_argument("--quick-yf-workers", type=int, default=12, help="Parallel subprocesses for quick yfinance check")
     parser.add_argument("--quick-yf-attempts", type=int, default=1, help="Attempts per proxy during quick yfinance check")
@@ -177,11 +279,18 @@ def main() -> int:
     parser.add_argument("--out-fetched", type=str, default=str(HERE / "http_proxies_fetched.txt"))
     parser.add_argument("--out-quickpass", type=str, default=str(HERE / "http_proxies_quickpass.txt"))
     parser.add_argument("--out-verified", type=str, default=str(HERE / "http_proxies_verified.txt"))
+    parser.add_argument(
+        "--out-pool-json",
+        type=str,
+        default=str(POOL_JSON_DEFAULT),
+        help="Persisted proxy pool stats JSON (reused across runs)",
+    )
     args = parser.parse_args()
 
     out_fetched = Path(args.out_fetched)
     out_quickpass = Path(args.out_quickpass)
     out_verified = Path(args.out_verified)
+    out_pool_json = Path(args.out_pool_json)
 
     print(f"[INFO] Fetching proxies from {len(args.sources)} sources...")
     fetched = fetch_sources(list(args.sources), timeout_s=float(args.fetch_timeout))
@@ -198,6 +307,36 @@ def main() -> int:
     if args.shuffle:
         random.shuffle(fetched)
 
+    # Expand to proxy URL candidates for prefilter (http:// + https://)
+    try:
+        from backend.stock_retrieval.proxy_pool import candidate_proxy_urls  # type: ignore
+    except Exception:
+        sys.path.insert(0, str(HERE))
+        from proxy_pool import candidate_proxy_urls  # type: ignore
+
+    prefilter_candidates: List[str] = []
+    for hp in fetched:
+        prefilter_candidates.extend(candidate_proxy_urls(hp))
+    prefilter_candidates = dedupe_preserve_order(prefilter_candidates)
+
+    print(
+        "[INFO] Prefiltering proxies for HTTPS CONNECT + Yahoo reachability "
+        f"(threads={args.prefilter_workers}, timeout={args.prefilter_timeout}s)..."
+    )
+    prefiltered = prefilter_https_connect(
+        prefilter_candidates,
+        timeout_s=float(args.prefilter_timeout),
+        max_workers=int(args.prefilter_workers),
+        stop_after=int(args.max_prefilter_pass) if args.max_prefilter_pass else None,
+    )
+    prefilter_pass = [p for _lat, p in prefiltered]
+    if prefilter_pass:
+        print(f"[INFO] Prefilter pass: {len(prefilter_pass)}/{len(prefilter_candidates)}")
+    else:
+        print(f"[WARN] Prefilter pass: 0/{len(prefilter_candidates)}")
+        print("[WARN] Proceeding to yfinance verification anyway (may be slow / low yield).")
+        prefilter_pass = prefilter_candidates
+
     print(
         "[INFO] Quick-checking proxies via yfinance yf.download() "
         f"(workers={args.quick_yf_workers}, timeout={args.quick_yf_timeout}s)... "
@@ -205,7 +344,7 @@ def main() -> int:
     )
     try:
         quickpass = yfinance_verify(
-            fetched,
+            prefilter_pass,
             max_workers=int(args.quick_yf_workers),
             timeout_s=float(args.quick_yf_timeout),
             attempts=int(args.quick_yf_attempts),
@@ -239,6 +378,42 @@ def main() -> int:
         verified = verified[: int(args.max_verified)]
     write_list(out_verified, verified)
     print(f"[INFO] Verified: {len(verified)} (wrote {out_verified})")
+
+    # Persist proxy pool stats (best-effort)
+    try:
+        from backend.stock_retrieval.proxy_pool import ProxyPool  # type: ignore
+    except Exception:
+        sys.path.insert(0, str(HERE))
+        from proxy_pool import ProxyPool  # type: ignore
+
+    pool = ProxyPool.load(out_pool_json)
+    now_ts = time.time()
+    # Mark first-seen for anything we touched
+    for p in prefilter_candidates:
+        s = pool.upsert(p)
+        if s.first_seen_ts is None:
+            s.first_seen_ts = now_ts
+
+    # Prefilter metadata
+    for lat, p in prefiltered:
+        s = pool.upsert(p)
+        s.last_verified_ts = now_ts
+        s.supports_https_connect = True
+        s.example_ok = True
+        s.yahoo_ok = True
+        pool.record_success(p, latency_ms=float(lat) * 1000.0)
+
+    # yfinance verified metadata
+    for p in verified:
+        s = pool.upsert(p)
+        s.last_verified_ts = now_ts
+        s.yfinance_ok = True
+        # Treat yfinance verification as a "success" too, but don't override latency too aggressively.
+        pool.record_success(p)
+
+    out_pool_json.parent.mkdir(parents=True, exist_ok=True)
+    pool.save(out_pool_json)
+    print(f"[INFO] Wrote proxy pool stats: {out_pool_json}")
     return 0
 
 
