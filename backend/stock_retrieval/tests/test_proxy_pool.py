@@ -48,3 +48,37 @@ class TestProxyPool(unittest.TestCase):
         pool._stats["http://a:1"].quarantined_until_ts = now - 1  # force expiry
         self.assertEqual(pool.choose(), "http://a:1")
 
+    def test_force_quarantine_even_when_threshold_not_met(self):
+        pool = ProxyPool(quarantine_seconds=60, failure_quarantine_threshold=3)
+        pool.add_many(["http://a:1"])
+
+        # Soft failure: should not quarantine yet (threshold=3)
+        pool.record_failure("http://a:1", "timeout")
+        self.assertEqual(pool.choose(), "http://a:1")
+
+        # Hard failure: force quarantine immediately
+        pool.record_failure_ex("http://a:1", "CONNECT 502", force_quarantine=True)
+        self.assertIsNone(pool.choose())
+
+    def test_json_roundtrip_includes_metadata_fields(self):
+        pool = ProxyPool()
+        s = pool.upsert("http://a:1")
+        s.first_seen_ts = 123.0
+        s.last_verified_ts = 456.0
+        s.supports_https_connect = True
+        s.example_ok = True
+        s.yahoo_ok = False
+        s.yfinance_ok = None
+        pool.record_success("http://a:1", latency_ms=50)
+
+        payload = pool.to_json()
+        loaded = ProxyPool.from_json(payload)
+        s2 = loaded.upsert("http://a:1")
+        self.assertEqual(s2.first_seen_ts, 123.0)
+        self.assertEqual(s2.last_verified_ts, 456.0)
+        self.assertEqual(s2.supports_https_connect, True)
+        self.assertEqual(s2.example_ok, True)
+        self.assertEqual(s2.yahoo_ok, False)
+        self.assertEqual(s2.yfinance_ok, None)
+        self.assertGreaterEqual(s2.successes, 1)
+

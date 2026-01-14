@@ -32,6 +32,9 @@ from stocks.models import Stock
 
 import yfinance as yf
 
+from backend.stock_retrieval.proxy_pool import ProxyPool
+from backend.stock_retrieval.proxy_error_classifier import is_hard_proxy_failure
+
 def configure_logging() -> logging.Logger:
     """
     Configure logging to BOTH stdout and a file under backend/logs.
@@ -140,10 +143,13 @@ rate_limiter = threading.Semaphore(1)
 last_request_time = [time.time()]
 
 # Proxy management
-proxy_list = []
-proxy_index = [0]
-failed_proxies = set()
 proxy_lock = threading.Lock()
+PROXY_POOL_JSON = Path(__file__).parent / "http_proxies_gold.json"
+proxy_pool = ProxyPool.load(PROXY_POOL_JSON)
+# Reasonable defaults for free proxies (fail fast, quarantine quickly)
+proxy_pool.quarantine_seconds = int(os.getenv("DAILY_PROXY_QUARANTINE_SECONDS", str(30 * 60)))
+proxy_pool.failure_quarantine_threshold = int(os.getenv("DAILY_PROXY_FAILURE_THRESHOLD", "1"))
+proxy_pool.min_successes_to_prefer = int(os.getenv("DAILY_PROXY_MIN_SUCCESSES_TO_PREFER", "1"))
 
 # ============================================================================
 # PROXY MANAGEMENT
@@ -167,41 +173,33 @@ def load_proxies() -> List[str]:
                 proxies.append(line)
 
     logger.info(f"Loaded {len(proxies)} proxies from {PROXY_FILE.name}")
+    # Merge into persisted pool (best-effort)
+    proxy_pool.add_many([normalize_proxy_url(p) for p in proxies])
+    try:
+        proxy_pool.save(PROXY_POOL_JSON)
+    except Exception:
+        pass
     return proxies
+
+def normalize_proxy_url(p: str) -> str:
+    p = str(p).strip()
+    if not p:
+        return p
+    if p.startswith("http://") or p.startswith("https://"):
+        return p
+    return f"http://{p}"
 
 def get_next_proxy() -> Optional[str]:
     """Get next working proxy with rotation"""
-    global proxy_list, proxy_index, failed_proxies
-
-    if not proxy_list:
-        return None
-
     with proxy_lock:
-        attempts = 0
-        max_attempts = min(20, len(proxy_list))
+        return proxy_pool.choose()
 
-        while attempts < max_attempts:
-            proxy = proxy_list[proxy_index[0]]
-            proxy_index[0] = (proxy_index[0] + 1) % len(proxy_list)
-
-            # Skip recently failed proxies
-            if proxy not in failed_proxies:
-                return proxy
-
-            attempts += 1
-
-        # All proxies failed, reset failed set
-        if len(failed_proxies) > len(proxy_list) * 0.5:
-            logger.warning(f"Resetting failed proxy tracking ({len(failed_proxies)} failed)")
-            failed_proxies.clear()
-
-        return proxy_list[proxy_index[0]] if proxy_list else None
-
-def mark_proxy_failed(proxy: str):
-    """Mark a proxy as failed"""
-    global failed_proxies
+def mark_proxy_failed(proxy_url: str, error: str):
+    """Record a proxy failure and quarantine if appropriate"""
+    if not proxy_url:
+        return
     with proxy_lock:
-        failed_proxies.add(proxy)
+        proxy_pool.record_failure_ex(proxy_url, error, force_quarantine=is_hard_proxy_failure(error))
 
 # ============================================================================
 # RATE-LIMITED FETCHER WITH PROXIES
@@ -230,12 +228,12 @@ def fetch_stock_with_proxy(ticker: str) -> Optional[Dict]:
         # Try with proxy first
         max_retries = 3
         for attempt in range(max_retries):
-            proxy = get_next_proxy()
+            proxy_url = get_next_proxy()
 
             try:
-                if proxy:
-                    # Use proxy (new yfinance API)
-                    yf.set_config(proxy=f"http://{proxy}")
+                if proxy_url:
+                    # Use proxy (daily-scanner style: yfinance supports proxy as string URL in many versions)
+                    yf.set_config(proxy=proxy_url)
                     stock = yf.Ticker(ticker)
                 else:
                     # No proxy available, use direct
@@ -245,8 +243,8 @@ def fetch_stock_with_proxy(ticker: str) -> Optional[Dict]:
                 info = stock.info
 
                 if not info or 'regularMarketPrice' not in info:
-                    if proxy and attempt < max_retries - 1:
-                        mark_proxy_failed(proxy)
+                    if proxy_url and attempt < max_retries - 1:
+                        mark_proxy_failed(proxy_url, "empty info/price")
                         continue
                     return None
 
@@ -336,15 +334,18 @@ def fetch_stock_with_proxy(ticker: str) -> Optional[Dict]:
 
                     # Metadata
                     "last_updated": django_tz.now(),
-                    "used_proxy": proxy is not None
+                    "used_proxy": proxy_url is not None
                 }
 
+                if proxy_url:
+                    with proxy_lock:
+                        proxy_pool.record_success(proxy_url)
                 return data
 
             except Exception as e:
                 error_msg = str(e)
-                if proxy and ('401' in error_msg or '403' in error_msg or 'timeout' in error_msg.lower()):
-                    mark_proxy_failed(proxy)
+                if proxy_url:
+                    mark_proxy_failed(proxy_url, error_msg)
 
                 if attempt < max_retries - 1:
                     time.sleep(1)  # Wait before retry
@@ -452,8 +453,8 @@ def run_daily_scanner():
     logger.info(f"Current time: {datetime.now().strftime('%I:%M:%S %p')}")
 
     # Load proxies
-    proxy_list = load_proxies()
-    logger.info(f"Proxies loaded: {len(proxy_list)}")
+    _ = load_proxies()
+    logger.info(f"Proxy pool size: {len(proxy_pool.proxies)} (json={PROXY_POOL_JSON.name})")
     logger.info("")
 
     # Load tickers
@@ -545,11 +546,18 @@ def run_daily_scanner():
     logger.info(f"Successful: {success_count} ({success_count/len(tickers)*100:.1f}%)")
     logger.info(f"Failed: {failed_count}")
     logger.info(f"Proxy usage: {proxy_used_count}/{success_count} ({proxy_used_count/success_count*100:.0f}%)")
-    logger.info(f"Failed proxies: {len(failed_proxies)}")
+    quarantined = len([p for p in proxy_pool.proxies if proxy_pool._stats[p].is_quarantined()])  # noqa: SLF001
+    logger.info(f"Proxy quarantined: {quarantined}/{len(proxy_pool.proxies)}")
     logger.info(f"Total time: {elapsed:.1f}s ({elapsed/3600:.1f} hours)")
     logger.info(f"Average rate: {actual_rate:.3f} t/s")
     logger.info(f"Target rate: {TARGET_RATE} t/s")
     logger.info("="*80)
+
+    # Persist proxy pool updates (best-effort)
+    try:
+        proxy_pool.save(PROXY_POOL_JSON)
+    except Exception:
+        pass
 
     # Check results
     if success_count / len(tickers) >= 0.95:

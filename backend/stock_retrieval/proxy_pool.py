@@ -55,6 +55,14 @@ def candidate_proxy_urls(hostport_or_url: str) -> List[str]:
 @dataclass
 class ProxyStats:
     proxy_url: str
+    # Metadata / capabilities (best-effort; populated by verifier pipeline)
+    first_seen_ts: Optional[float] = None
+    last_verified_ts: Optional[float] = None
+    supports_https_connect: Optional[bool] = None
+    example_ok: Optional[bool] = None
+    yahoo_ok: Optional[bool] = None
+    yfinance_ok: Optional[bool] = None
+
     successes: int = 0
     failures: int = 0
     last_success_ts: Optional[float] = None
@@ -132,8 +140,19 @@ class ProxyPool:
         self.upsert(proxy_url).record_success(latency_ms=latency_ms)
 
     def record_failure(self, proxy_url: str, error: str) -> None:
+        self.record_failure_ex(proxy_url, error, force_quarantine=False)
+
+    def record_failure_ex(self, proxy_url: str, error: str, *, force_quarantine: bool) -> None:
+        """
+        Record a failure and optionally quarantine immediately (even if threshold > 1).
+
+        Use force_quarantine for hard proxy failures like:
+        - CONNECT 400/502/503
+        - repeated timeouts
+        """
         stats = self.upsert(proxy_url)
-        quarantine = self.quarantine_seconds if stats.failures + 1 >= self.failure_quarantine_threshold else None
+        should_quarantine = force_quarantine or (stats.failures + 1 >= self.failure_quarantine_threshold)
+        quarantine = self.quarantine_seconds if should_quarantine else None
         stats.record_failure(error, quarantine_seconds=quarantine)
 
     def choose(self, *, now_ts: Optional[float] = None) -> Optional[str]:
